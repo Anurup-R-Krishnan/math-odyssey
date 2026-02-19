@@ -28,15 +28,13 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
     }, [missions]);
 
     // Constants for layout
-    const NODE_HEIGHT = 160; // Vertical spacing
-    const AMPLITUDE = 80; // How wide the zigzag is
-    const OFFSET_Y = 60; // Initial top padding
+    const NODE_HEIGHT = 180; // Vertical spacing (Increased for breathing room)
+    const AMPLITUDE = 100; // How wide the zigzag is
+    const OFFSET_Y = 80; // Initial top padding
 
     // Calculate position for a node
     const getNodePosition = (index: number) => {
         const y = index * NODE_HEIGHT + OFFSET_Y;
-        // Sine wave pattern: Center + Amplitude * sin(frequency)
-        // Using index directly gives a nice zigzag if we adjust phase
         const xOffset = Math.sin(index * 2) * AMPLITUDE;
         return { x: xOffset, y };
     };
@@ -49,20 +47,16 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
         missions.forEach((_, index) => {
             const current = getNodePosition(index);
 
-            // We need to convert from relative center offset to absolute SVG coordinates
-            // Center of container is dimensions.width / 2
             const cx = dimensions.width / 2 + current.x;
-            const cy = current.y + 40; // +40 to center in the 80px high node (approx)
+            const cy = current.y + 48; // Center in the 96px high node (approx)
 
             if (index === 0) {
                 path += `M ${cx} ${cy}`;
             } else {
                 const prev = getNodePosition(index - 1);
                 const px = dimensions.width / 2 + prev.x;
-                const py = prev.y + 40;
+                const py = prev.y + 48;
 
-                // Cubic bezier for smooth curve
-                // Control points: vertical from previous, vertical to current
                 const cp1x = px;
                 const cp1y = py + (cy - py) * 0.5;
                 const cp2x = cx;
@@ -75,30 +69,42 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
     };
 
     return (
-        <div className="relative w-full max-w-md mx-auto py-12" ref={containerRef}>
+        <div className="relative w-full max-w-lg mx-auto py-12" ref={containerRef}>
             {/* Connector Line SVG */}
             <svg
-                className="absolute top-0 left-0 w-full h-full pointer-events-none z-0"
-                style={{ height: missions.length * NODE_HEIGHT + 100 }}
+                className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 overflow-visible"
+                style={{ height: missions.length * NODE_HEIGHT + 150 }}
             >
+                {/* Glow effect for path */}
                 <path
                     d={generatePath()}
                     fill="none"
-                    stroke="#e2e8f0" // muted color
-                    strokeWidth="8"
+                    stroke="rgba(255, 255, 255, 0.1)"
+                    strokeWidth="20"
                     strokeLinecap="round"
-                    strokeDasharray="16 8"
-                    className="opacity-50"
+                    className="blur-md"
                 />
+
+                {/* Dashed Base Path */}
+                <path
+                    d={generatePath()}
+                    fill="none"
+                    stroke="rgba(255, 255, 255, 0.2)"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                    strokeDasharray="20 15"
+                />
+
+                {/* Animated Progress Path (Optional overlay) */}
                 <motion.path
                     d={generatePath()}
                     fill="none"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth="8"
+                    stroke="rgba(255, 255, 255, 0.4)"
+                    strokeWidth="4"
                     strokeLinecap="round"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                    strokeDasharray="10 10"
+                    animate={{ strokeDashoffset: [0, -20] }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 />
             </svg>
 
@@ -120,8 +126,8 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
                 );
             })}
 
-            {/* Spacer to give the container height since elements are absolute */}
-            <div style={{ height: (missions.length - 1) * NODE_HEIGHT + 150 }} />
+            {/* Spacer */}
+            <div style={{ height: (missions.length - 1) * NODE_HEIGHT + 200 }} />
         </div>
     );
 };
