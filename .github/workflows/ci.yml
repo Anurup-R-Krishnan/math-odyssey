@@ -22,15 +22,20 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
+          cache-dependency-path: math-explorer/pnpm-lock.yaml
 
       - name: Install dependencies
+        working-directory: math-explorer
         run: pnpm install --frozen-lockfile
 
       - name: Type check
+        working-directory: math-explorer
         run: pnpm exec tsc --noEmit
 
       - name: Run tests
+        working-directory: math-explorer
         run: pnpm test
 
       - name: Build
+        working-directory: math-explorer
         run: pnpm build
