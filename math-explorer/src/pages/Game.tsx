@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { QuestionCard } from "@/components/game/QuestionCard";
 import { useGameSession } from "@/hooks/useGameSession";
 import { useMissionProgress } from "@/hooks/useMissionProgress";
+import { encryptData, decryptData } from "@/lib/security";
 import { generateQuestion } from "@/data/questions";
 import { Question, QuestionAttempt } from "@/types/game";
 import { Progress } from "@/components/ui/progress";
@@ -47,7 +48,14 @@ const Game = () => {
 
   // Load saved roll number on mount
   useEffect(() => {
-    const savedRollNo = localStorage.getItem("last_roll_no");
+    const raw = localStorage.getItem("last_roll_no");
+    let savedRollNo = decryptData<string>(raw);
+
+    // Fallback for legacy raw string
+    if (!savedRollNo && raw) {
+      savedRollNo = raw;
+    }
+
     if (savedRollNo) {
       setRollNo(savedRollNo);
     }
@@ -58,7 +66,7 @@ const Game = () => {
       if (!rollNo.trim()) return;
 
       // Save roll number
-      localStorage.setItem("last_roll_no", rollNo.trim());
+      localStorage.setItem("last_roll_no", encryptData(rollNo.trim()));
 
       startSession(rollNo.trim(), initialLevel);
       setMode(selectedMode);

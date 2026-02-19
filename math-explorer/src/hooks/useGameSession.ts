@@ -4,6 +4,7 @@ import {
   QuestionAttempt,
   DifficultyState,
 } from "@/types/game";
+import { encryptData, decryptData } from "@/lib/security";
 
 const SESSION_KEY = "neuromath_sessions";
 
@@ -12,16 +13,12 @@ function generateSessionId(): string {
 }
 
 function loadSessions(): GameSession[] {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+  const sessions = decryptData<GameSession[]>(localStorage.getItem(SESSION_KEY));
+  return sessions || [];
 }
 
 function saveSessions(sessions: GameSession[]) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(sessions));
+  localStorage.setItem(SESSION_KEY, encryptData(sessions));
 }
 
 export function useGameSession() {
