@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell } from "recharts";
 import { useGameSession } from "@/hooks/useGameSession";
+import { GameSession } from "@/types/game";
 import { Download, Rocket } from "lucide-react";
 
 const COLORS = [
@@ -21,7 +22,15 @@ const COLORS = [
 const Dashboard = () => {
   const navigate = useNavigate();
   const { getAllSessions, exportCSV } = useGameSession();
-  const sessions = useMemo(() => getAllSessions(), [getAllSessions]);
+  const [sessions, setSessions] = useState<GameSession[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    getAllSessions().then((data) => {
+      if (mounted) setSessions(data);
+    }).catch(console.error);
+    return () => { mounted = false; };
+  }, [getAllSessions]);
 
   const totalAttempts = useMemo(
     () => sessions.reduce((sum, s) => sum + s.attempts.length, 0),
@@ -65,8 +74,8 @@ const Dashboard = () => {
     ];
   }, [totalAttempts, totalCorrect]);
 
-  const handleExport = useCallback(() => {
-    const csv = exportCSV();
+  const handleExport = useCallback(async () => {
+    const csv = await exportCSV();
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

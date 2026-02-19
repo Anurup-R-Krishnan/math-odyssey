@@ -4,24 +4,10 @@ import {
   QuestionAttempt,
   DifficultyState,
 } from "@/types/game";
-
-const SESSION_KEY = "neuromath_sessions";
+import { addSession, getAllSessions as getAllSessionsDB, migrateFromLocalStorage } from "@/lib/db";
 
 function generateSessionId(): string {
   return `session_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-}
-
-function loadSessions(): GameSession[] {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveSessions(sessions: GameSession[]) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(sessions));
 }
 
 export function useGameSession() {
@@ -31,6 +17,13 @@ export function useGameSession() {
     consecutiveCorrect: 0,
     consecutiveWrong: 0,
   });
+
+  useEffect(() => {
+    // Attempt migration on mount
+    migrateFromLocalStorage().catch((err) =>
+      console.error("Migration failed:", err)
+    );
+  }, []);
 
   const startSession = useCallback((rollNo: string, initialLevel: number = 1) => {
     const newSession: GameSession = {
@@ -81,19 +74,21 @@ export function useGameSession() {
     setSession((prev) => {
       if (!prev) return prev;
       const ended = { ...prev, endedAt: Date.now() };
-      const all = loadSessions();
-      all.push(ended);
-      saveSessions(all);
+
+      addSession(ended).catch((err) =>
+        console.error("Failed to save session to DB:", err)
+      );
+
       return ended;
     });
   }, []);
 
-  const getAllSessions = useCallback((): GameSession[] => {
-    return loadSessions();
+  const getAllSessions = useCallback(async (): Promise<GameSession[]> => {
+    return await getAllSessionsDB();
   }, []);
 
-  const exportCSV = useCallback((): string => {
-    const sessions = loadSessions();
+  const exportCSV = useCallback(async (): Promise<string> => {
+    const sessions = await getAllSessionsDB();
     const rows = ["rollNo,sessionId,questionId,attempts,hintUsed,correct"];
     sessions.forEach((s) => {
       s.attempts.forEach((a) => {
