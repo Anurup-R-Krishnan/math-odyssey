@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,18 @@ import { Star, Rocket, Target, Flag, Ghost, Zap } from "lucide-react";
 type GameMode = "addition" | "subtraction" | "pattern";
 type PilotIcon = "rocket" | "ghost" | "zap";
 
+const VALID_MODES: GameMode[] = ["addition", "subtraction", "pattern"];
+
+function isValidMode(value: string | null): value is GameMode {
+  return VALID_MODES.includes(value as GameMode);
+}
+
 const Game = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const urlType = searchParams.get("type");
+  const preselectedMode: GameMode | null = isValidMode(urlType) ? urlType : null;
+
   const { session, difficulty, startSession, recordAttempt, endSession } =
     useGameSession();
   const [rollNo, setRollNo] = useState("");
@@ -68,14 +80,16 @@ const Game = () => {
     setCorrectCount(0);
   }, []);
 
-  // Pre-game: roll number + mode selection
+  // Pre-game: roll number entry (+ mode selection if no URL type)
   if (!session || !mode) {
     return (
       <section className="container max-w-2xl py-12 px-6 space-y-8 animate-in fade-in duration-500">
         <div className="text-center space-y-3">
           <h1 className="text-3xl font-bold tracking-tight">Mission Briefing</h1>
           <p className="text-muted-foreground">
-            Enter your pilot ID and choose your destination.
+            {preselectedMode
+              ? `Get ready for the ${preselectedMode.charAt(0).toUpperCase() + preselectedMode.slice(1)} Mission! Enter your pilot ID to begin.`
+              : "Enter your pilot ID and choose your destination."}
           </p>
         </div>
 
@@ -93,11 +107,10 @@ const Game = () => {
                   onClick={() => setPilot(p.id)}
                   aria-label={`Select ${p.label}`}
                   aria-pressed={pilot === p.id}
-                  className={`p-4 rounded-2xl border-2 transition-all ${
-                    pilot === p.id
+                  className={`p-4 rounded-2xl border-2 transition-all ${pilot === p.id
                       ? "border-primary bg-primary/10 scale-110 shadow-md"
                       : "border-transparent hover:bg-muted"
-                  }`}
+                    }`}
                 >
                   <p.icon className={`w-8 h-8 ${pilot === p.id ? "text-primary" : "text-muted-foreground"}`} />
                 </button>
@@ -111,34 +124,51 @@ const Game = () => {
               id="rollno"
               value={rollNo}
               onChange={(e) => setRollNo(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && rollNo.trim() && preselectedMode) {
+                  handleStart(preselectedMode);
+                }
+              }}
               placeholder="e.g., EXPLORER-1"
               className="h-12 rounded-xl border-2 focus-visible:ring-primary"
             />
           </div>
 
-          <div className="space-y-4">
-            <Label className="text-base font-medium">Choose Your Mission</Label>
-            <div className="grid grid-cols-1 gap-3">
-              {(
-                [
-                  { key: "addition" as GameMode, label: "Addition Station", desc: "Combine numbers together" },
-                  { key: "subtraction" as GameMode, label: "Subtraction Station", desc: "Find what remains" },
-                  { key: "pattern" as GameMode, label: "Pattern Station", desc: "Follow the sequence" },
-                ] as const
-              ).map((m) => (
-                <Button
-                  key={m.key}
-                  variant="outline"
-                  className="h-auto flex flex-col items-start p-4 text-left border-2 hover:border-primary/50 hover:bg-primary/5 rounded-2xl transition-all"
-                  onClick={() => handleStart(m.key)}
-                  disabled={!rollNo.trim()}
-                >
-                  <span className="font-bold text-base">{m.label}</span>
-                  <span className="text-xs text-muted-foreground">{m.desc}</span>
-                </Button>
-              ))}
+          {/* If a mode was pre-selected via URL, show a single Launch button */}
+          {preselectedMode ? (
+            <Button
+              size="lg"
+              className="w-full h-14 rounded-2xl text-base font-bold shadow-sm"
+              onClick={() => handleStart(preselectedMode)}
+              disabled={!rollNo.trim()}
+            >
+              Launch Mission 🚀
+            </Button>
+          ) : (
+            <div className="space-y-4">
+              <Label className="text-base font-medium">Choose Your Mission</Label>
+              <div className="grid grid-cols-1 gap-3">
+                {(
+                  [
+                    { key: "addition" as GameMode, label: "Addition Station", desc: "Combine numbers together" },
+                    { key: "subtraction" as GameMode, label: "Subtraction Station", desc: "Find what remains" },
+                    { key: "pattern" as GameMode, label: "Pattern Station", desc: "Follow the sequence" },
+                  ] as const
+                ).map((m) => (
+                  <Button
+                    key={m.key}
+                    variant="outline"
+                    className="h-auto flex flex-col items-start p-4 text-left border-2 hover:border-primary/50 hover:bg-primary/5 rounded-2xl transition-all"
+                    onClick={() => handleStart(m.key)}
+                    disabled={!rollNo.trim()}
+                  >
+                    <span className="font-bold text-base">{m.label}</span>
+                    <span className="text-xs text-muted-foreground">{m.desc}</span>
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
     );
@@ -156,7 +186,7 @@ const Game = () => {
           <div className="space-y-2">
             <h2 className="text-2xl font-bold">Mission Accomplished!</h2>
             <p className="text-muted-foreground">
-              Great job! You solved {correctCount} missions.
+              Great job! You solved {correctCount} out of {totalQuestions} problems.
             </p>
           </div>
 
@@ -170,7 +200,7 @@ const Game = () => {
 
           <div className="flex flex-col gap-3 pt-4">
             <Button size="lg" className="rounded-2xl h-14 text-base font-bold shadow-sm" onClick={handleRestart}>Play Again</Button>
-            <Button variant="outline" size="lg" className="rounded-2xl h-14 text-base" onClick={() => window.location.href = "/dashboard"}>
+            <Button variant="outline" size="lg" className="rounded-2xl h-14 text-base" onClick={() => navigate("/dashboard")}>
               View My Progress
             </Button>
           </div>
@@ -219,9 +249,9 @@ const Game = () => {
 
           {/* Checkpoints */}
           <div className="absolute top-6 left-0 w-full flex justify-between px-0.5 pointer-events-none">
-             <div className="w-1 h-4 bg-muted rounded-full" />
-             <div className="w-1 h-4 bg-muted rounded-full" />
-             <Flag className="w-4 h-4 text-muted -mt-4" />
+            <div className="w-1 h-4 bg-muted rounded-full" />
+            <div className="w-1 h-4 bg-muted rounded-full" />
+            <Flag className="w-4 h-4 text-muted -mt-4" />
           </div>
         </div>
 

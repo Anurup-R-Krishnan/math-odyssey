@@ -33,27 +33,6 @@ export function QuestionCard({
   const { addStar } = useStars();
   const [attemptCount, setAttemptCount] = useState(0);
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (phase !== "answering" && phase !== "microPractice") return;
-
-      const key = e.key;
-      const index = parseInt(key, 10) - 1;
-
-      if (index >= 0 && index < activeQuestion.options.length) {
-        const option = activeQuestion.options[index];
-        if (phase === "microPractice") {
-          handleMicroAnswer(option);
-        } else {
-          handleAnswer(option);
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [phase, activeQuestion.options, handleAnswer, handleMicroAnswer]);
   const [currentHint, setCurrentHint] = useState<string | null>(null);
   const [phase, setPhase] = useState<Phase>("answering");
   const [selectedOption, setSelectedOption] = useState<number | string | null>(null);
@@ -63,6 +42,9 @@ export function QuestionCard({
   // Micro-practice state
   const [microQuestion, setMicroQuestion] = useState<Question | null>(null);
   const [microAttempts, setMicroAttempts] = useState(0);
+
+  // Determine active question based on phase
+  const activeQuestion = phase === "microPractice" && microQuestion ? microQuestion : question;
 
   const handleAnswer = useCallback(
     (option: number | string) => {
@@ -116,16 +98,6 @@ export function QuestionCard({
     [attemptCount, phase, question, onComplete, addStar]
   );
 
-  const handleRevealContinue = useCallback(() => {
-    const micro = generateMicroPractice(question);
-    setMicroQuestion(micro);
-    setPhase("microPractice");
-    setCurrentHint(null);
-    setSelectedOption(null);
-    setMicroAttempts(0);
-    setShowFadeOut(false);
-  }, [question]);
-
   const handleMicroAnswer = useCallback(
     (option: number | string) => {
       if (!microQuestion) return;
@@ -147,12 +119,42 @@ export function QuestionCard({
     [microQuestion]
   );
 
-  const activeQuestion = phase === "microPractice" && microQuestion ? microQuestion : question;
+  const handleRevealContinue = useCallback(() => {
+    const micro = generateMicroPractice(question);
+    setMicroQuestion(micro);
+    setPhase("microPractice");
+    setCurrentHint(null);
+    setSelectedOption(null);
+    setMicroAttempts(0);
+    setShowFadeOut(false);
+  }, [question]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (phase !== "answering" && phase !== "microPractice") return;
+
+      const key = e.key;
+      const index = parseInt(key, 10) - 1;
+
+      if (activeQuestion && index >= 0 && index < activeQuestion.options.length) {
+        const option = activeQuestion.options[index];
+        if (phase === "microPractice") {
+          handleMicroAnswer(option);
+        } else {
+          handleAnswer(option);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [phase, activeQuestion, handleAnswer, handleMicroAnswer]);
 
   const motionProps = {
     initial: { opacity: 0, y: 10 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.4, ease: "easeOut" },
+    transition: { duration: 0.4 },
   };
 
   return (
@@ -248,21 +250,32 @@ export function QuestionCard({
             <div className="grid grid-cols-2 gap-4">
               {activeQuestion.options.map((option) => {
                 const isSelected = selectedOption === option;
-                const isWrong =
-                  isSelected && String(option) !== String(activeQuestion.answer);
+                // Check if this option is the one selected AND we are not in correct state yet
+                // If it IS selected and it IS NOT the answer, it's wrong.
+                const isWrong = isSelected && String(option) !== String(activeQuestion.answer) && !isCorrect;
+
+                // Determine button class based on state
+                let buttonClass = "h-16 text-xl font-bold rounded-2xl border-2 transition-all ";
+                if (isWrong) {
+                  buttonClass += "border-destructive/50 bg-destructive/5 animate-shake";
+                } else if (isSelected && isCorrect) {
+                  // Only show green if they got it correct
+                  buttonClass += "border-secondary bg-secondary animate-correct-glow";
+                } else {
+                  buttonClass += "border-transparent";
+                }
+
                 return (
                   <Button
                     key={String(option)}
-                    variant={isWrong ? "outline" : isSelected ? "default" : "secondary"}
-                    className={`h-16 text-xl font-bold rounded-2xl border-2 transition-all ${
-                      isWrong ? "border-destructive/50 bg-destructive/5" : isSelected ? "border-primary shadow-sm" : "border-transparent"
-                    }`}
+                    variant={isWrong ? "outline" : (isSelected && isCorrect) ? "default" : "secondary"}
+                    className={buttonClass}
                     onClick={() =>
                       phase === "microPractice"
                         ? handleMicroAnswer(option)
                         : handleAnswer(option)
                     }
-                    disabled={phase === "complete"}
+                    disabled={false}
                     aria-label={`Answer: ${option}`}
                   >
                     <span className="flex items-center justify-between w-full">
@@ -294,12 +307,12 @@ export function QuestionCard({
                       y: [0, -10, 0]
                     }}
                     transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      delay: i * 0.2
+                      duration: 0.8, // Faster, one-shot animation
+                      times: [0, 0.5, 1],
+                      delay: i * 0.1
                     }}
                   >
-                    <Star className="w-8 h-8 text-accent-foreground fill-accent-foreground shadow-sm" />
+                    <Star className="w-8 h-8 text-secondary-foreground fill-secondary-foreground shadow-sm" />
                   </motion.div>
                 ))}
               </div>

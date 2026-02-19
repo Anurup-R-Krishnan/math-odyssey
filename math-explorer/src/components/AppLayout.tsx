@@ -1,8 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { Menu, X, Map as MapIcon, LayoutDashboard, Info, Star } from "lucide-react";
+import { Menu, X, Map as MapIcon, LayoutDashboard, Info, Star, Eye, EyeOff } from "lucide-react";
 import { useStars } from "@/hooks/useStars";
+import { useFocusMode } from "@/hooks/useFocusMode";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const navItems = [
   { to: "/", label: "Mission Map", icon: MapIcon },
@@ -14,6 +21,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { stars } = useStars();
+  const { focusMode, toggleFocusMode } = useFocusMode();
 
   return (
     <div className="min-h-screen flex flex-col bg-background selection:bg-primary/30">
@@ -23,7 +31,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       >
         Skip to main content
       </a>
-      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur-md transition-all duration-300">
         <nav className="container max-w-5xl flex items-center justify-between h-16 px-6">
           <Link
             to="/"
@@ -36,8 +44,34 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Focus Mode Toggle */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleFocusMode}
+                  className={cn(
+                    "rounded-full w-9 h-9 transition-colors",
+                    focusMode ? "bg-primary/20 text-primary" : "text-muted-foreground hover:bg-muted"
+                  )}
+                  aria-label={focusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
+                  aria-pressed={focusMode}
+                >
+                  {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{focusMode ? "Exit Focus Mode" : "Enter Focus Mode"}</p>
+              </TooltipContent>
+            </Tooltip>
+
             {/* Star Counter */}
-            <div className="flex items-center gap-1.5 bg-accent/20 px-3 py-1.5 rounded-full border border-accent/20">
+            <div
+              className="flex items-center gap-1.5 bg-accent/20 px-3 py-1.5 rounded-full border border-accent/20"
+              role="status"
+              aria-label={`You have collected ${stars} stars`}
+            >
               <Star className="w-4 h-4 text-accent-foreground fill-accent-foreground animate-pulse" />
               <span className="text-sm font-bold text-accent-foreground">{stars}</span>
             </div>

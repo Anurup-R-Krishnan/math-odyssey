@@ -50,9 +50,8 @@ export function ObjectVisualizer({
                 delay: shouldAnimate ? i * 0.04 : 0,
                 duration: shouldAnimate ? 0.25 : 0.05,
               }}
-              className={`w-4 h-4 rounded-full ${colorClass} ${
-                isGroupBoundary ? "ml-2" : ""
-              }`}
+              className={`w-4 h-4 rounded-full ${colorClass} ${isGroupBoundary ? "ml-2" : ""
+                }`}
               aria-hidden="true"
             />
           );
@@ -70,7 +69,7 @@ export function PatternVisualizer({ sequence }: PatternVisualizerProps) {
   const { shouldAnimate } = useFocusMode();
 
   return (
-    <div className="flex items-center gap-2 justify-center flex-wrap">
+    <div className="flex items-center gap-4 justify-center flex-wrap">
       {sequence.map((color, i) => {
         if (color === "?") {
           return (
@@ -79,22 +78,42 @@ export function PatternVisualizer({ sequence }: PatternVisualizerProps) {
               initial={shouldAnimate ? { scale: 0 } : false}
               animate={{ scale: 1 }}
               transition={{ delay: shouldAnimate ? i * 0.08 : 0 }}
-              className="w-10 h-10 rounded-lg border-2 border-dashed border-muted-foreground flex items-center justify-center text-muted-foreground font-bold"
+              className="flex flex-col items-center gap-1"
             >
-              ?
+              <div className="w-12 h-12 rounded-xl border-2 border-dashed border-muted-foreground flex items-center justify-center text-muted-foreground font-bold bg-muted/20">
+                ?
+              </div>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Next</span>
             </motion.div>
           );
         }
         const colorClass = DOT_COLORS[color] ?? DOT_COLORS.default;
+
+        // Add specific border styles for better distinction (shape-like effect)
+        let borderClass = "";
+        if (color === "red") borderClass = "rounded-xl"; // Square-ish
+        else if (color === "blue") borderClass = "rounded-full"; // Circle
+        else if (color === "green") borderClass = "rounded-tr-3xl rounded-bl-3xl rounded-tl-lg rounded-br-lg"; // Leaf-like
+        else if (color === "yellow") borderClass = "rounded-lg rotate-45 scale-90"; // Diamond-ish
+        else borderClass = "rounded-xl";
+
         return (
           <motion.div
             key={i}
             initial={shouldAnimate ? { scale: 0 } : false}
             animate={{ scale: 1 }}
             transition={{ delay: shouldAnimate ? i * 0.08 : 0 }}
-            className={`w-10 h-10 rounded-lg ${colorClass}`}
-            aria-label={`${color} block`}
-          />
+            className="flex flex-col items-center gap-1"
+          >
+            <div
+              className={`w-12 h-12 shadow-sm border-2 border-white/20 ${colorClass} ${borderClass}`}
+              aria-label={`${color} block`}
+            />
+            {/* Color label for accessibility/color-blindness */}
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+              {color}
+            </span>
+          </motion.div>
         );
       })}
     </div>

@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +19,7 @@ const COLORS = [
 ];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { getAllSessions, exportCSV } = useGameSession();
   const sessions = useMemo(() => getAllSessions(), [getAllSessions]);
 
@@ -129,7 +131,7 @@ const Dashboard = () => {
                 Your mission log is empty. Complete your first mission to start tracking your progress through the stars!
               </p>
             </div>
-            <Button size="lg" className="rounded-full px-10 h-14 font-bold shadow-md" onClick={() => window.location.href = "/"}>
+            <Button size="lg" className="rounded-full px-10 h-14 font-bold shadow-md" onClick={() => navigate("/")}>
               Go to Mission Map
             </Button>
           </CardContent>

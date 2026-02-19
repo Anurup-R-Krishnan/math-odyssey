@@ -5,22 +5,22 @@ import { Download } from "lucide-react";
 
 const TEAM_MEMBERS = [
   {
-    name: "Team Member 1",
-    rollNo: "CB.EN.U4CSE001",
+    name: "[Member Name 1]",
+    rollNo: "[Roll No 1]",
     role: "Developer",
-    initials: "T1",
+    initials: "M1",
   },
   {
-    name: "Team Member 2",
-    rollNo: "CB.EN.U4CSE002",
+    name: "[Member Name 2]",
+    rollNo: "[Roll No 2]",
     role: "Designer",
-    initials: "T2",
+    initials: "M2",
   },
   {
-    name: "Team Member 3",
-    rollNo: "CB.EN.U4CSE003",
+    name: "[Member Name 3]",
+    rollNo: "[Roll No 3]",
     role: "Tester",
-    initials: "T3",
+    initials: "M3",
   },
 ];
 

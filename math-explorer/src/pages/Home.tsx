@@ -55,7 +55,7 @@ const Home = () => {
             transition={{ delay: idx * 0.1 }}
             whileHover={{ y: -5 }}
           >
-            <Link to="/game" className="group block h-full focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 rounded-[2.5rem]" aria-label={`Start ${mission.title}`}>
+            <Link to={`/game?type=${mission.id}`} className="group block h-full focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 rounded-[2.5rem]" aria-label={`Start ${mission.title}`}>
               <div className="relative overflow-hidden bg-card border-2 border-transparent group-hover:border-primary/30 group-focus-visible:border-primary/30 transition-all rounded-[2.5rem] p-8 text-center space-y-4 shadow-sm group-hover:shadow-md h-full flex flex-col items-center justify-center">
                 {/* Active Pulse */}
                 <div className="absolute top-4 right-4 w-3 h-3 bg-primary/40 rounded-full animate-ping" />
