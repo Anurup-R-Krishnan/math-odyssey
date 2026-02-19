@@ -8,7 +8,7 @@ import {
 const SESSION_KEY = "neuromath_sessions";
 
 function generateSessionId(): string {
-  return `session_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  return `session_${Date.now()}_${crypto.randomUUID()}`;
 }
 
 function loadSessions(): GameSession[] {
