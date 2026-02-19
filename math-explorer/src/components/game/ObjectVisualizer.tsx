@@ -9,6 +9,8 @@ interface ObjectVisualizerProps {
   label?: string;
 }
 
+const LARGE_NUMBER_THRESHOLD = 50;
+
 const DOT_COLORS: Record<string, string> = {
   red: "bg-red-400",
   blue: "bg-blue-400",
@@ -28,6 +30,7 @@ export function ObjectVisualizer({
   const { shouldAnimate } = useFocusMode();
   const dots = Array.from({ length: count }, (_, i) => i);
   const colorClass = DOT_COLORS[color] ?? DOT_COLORS.default;
+  const useOptimizedRendering = count > LARGE_NUMBER_THRESHOLD;
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -37,6 +40,22 @@ export function ObjectVisualizer({
       <div className="flex flex-wrap gap-1.5 justify-center max-w-[200px]">
         {dots.map((i) => {
           const isGroupBoundary = groupSize > 0 && i > 0 && i % groupSize === 0;
+
+          if (useOptimizedRendering) {
+            return (
+              <div
+                key={i}
+                className={`w-4 h-4 rounded-full ${colorClass} ${isGroupBoundary ? "ml-2" : ""}`}
+                style={{
+                  opacity: fadeOut ? 0 : 1,
+                  transform: fadeOut ? "scale(0)" : "scale(1)",
+                  transition: shouldAnimate ? "all 0.3s ease-in-out" : "none",
+                }}
+                aria-hidden="true"
+              />
+            );
+          }
+
           return (
             <motion.div
               key={i}
