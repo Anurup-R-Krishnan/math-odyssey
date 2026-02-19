@@ -17,7 +17,21 @@ import { saveAs } from "file-saver";
 const TEAM_NAME = "NeuroMath";
 
 const MEMBERS = [
-  { name: "Anurup R Krishnan", rollNo: "CB.SC.U4CSE23155", role: "Developer" },
+  {
+    name: import.meta.env.VITE_TEAM_MEMBER_1_NAME || "Team Member 1",
+    rollNo: import.meta.env.VITE_TEAM_MEMBER_1_ROLL_NO || "CB.EN.U4CSE00X",
+    role: import.meta.env.VITE_TEAM_MEMBER_1_ROLE || "Developer",
+  },
+  {
+    name: import.meta.env.VITE_TEAM_MEMBER_2_NAME || "Team Member 2",
+    rollNo: import.meta.env.VITE_TEAM_MEMBER_2_ROLL_NO || "CB.EN.U4CSE00Y",
+    role: import.meta.env.VITE_TEAM_MEMBER_2_ROLE || "Designer",
+  },
+  {
+    name: import.meta.env.VITE_TEAM_MEMBER_3_NAME || "Team Member 3",
+    rollNo: import.meta.env.VITE_TEAM_MEMBER_3_ROLL_NO || "CB.EN.U4CSE00Z",
+    role: import.meta.env.VITE_TEAM_MEMBER_3_ROLE || "Tester",
+  },
 ];
 
 function createBorderedCell(text: string, bold = false): TableCell {
