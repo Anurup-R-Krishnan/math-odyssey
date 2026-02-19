@@ -80,6 +80,7 @@ const INITIAL_MISSIONS: Mission[] = [
 
 export function useMissionProgress() {
     const [missions, setMissions] = useState<Mission[]>(INITIAL_MISSIONS);
+    const [isLoaded, setIsLoaded] = useState(false);
 
     // Load from storage on mount
     useEffect(() => {
@@ -98,6 +99,8 @@ export function useMissionProgress() {
             }
         } catch (e) {
             console.error("Failed to load mission progress", e);
+        } finally {
+            setIsLoaded(true);
         }
     }, []);
 
@@ -108,6 +111,13 @@ export function useMissionProgress() {
         });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(progressMap));
     }, []);
+
+    // Save progress when missions change, but only after initial load
+    useEffect(() => {
+        if (isLoaded) {
+            saveProgress(missions);
+        }
+    }, [missions, isLoaded, saveProgress]);
 
     const completeMission = useCallback((missionId: string, stars: number) => {
         setMissions(prev => {
@@ -132,10 +142,9 @@ export function useMissionProgress() {
                 }
             }
 
-            saveProgress(newMissions);
             return newMissions;
         });
-    }, [saveProgress]);
+    }, []);
 
     return {
         missions,
