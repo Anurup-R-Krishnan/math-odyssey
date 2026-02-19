@@ -1,10 +1,9 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Star, Lock, Play } from "lucide-react";
+import { Star, Lock, Play, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Mission } from "@/types/game";
-import { Button } from "@/components/ui/button";
+import { Mission, ProblemType } from "@/types/game";
 import {
     Tooltip,
     TooltipContent,
@@ -18,19 +17,33 @@ interface MissionNodeProps {
     isLeft: boolean;
 }
 
+const getTypeStyles = (type: ProblemType, status: Mission["status"]) => {
+    if (status === "locked") {
+        return "bg-slate-200 border-slate-300 text-slate-400";
+    }
+
+    switch (type) {
+        case "addition":
+            return "bg-blue-500 border-blue-700 text-white shadow-blue-500/40";
+        case "subtraction":
+            return "bg-red-500 border-red-700 text-white shadow-red-500/40";
+        case "pattern":
+            return "bg-purple-500 border-purple-700 text-white shadow-purple-500/40";
+        default:
+            return "bg-green-500 border-green-700 text-white";
+    }
+};
+
 const MissionNode: React.FC<MissionNodeProps> = ({ mission, index, isLeft }) => {
     const isLocked = mission.status === "locked";
     const isActive = mission.status === "active";
     const isCompleted = mission.status === "completed";
 
-    // Base styles for the node
+    // 3D Button Style
     const nodeBaseStyles = cn(
-        "relative flex items-center justify-center w-20 h-20 rounded-full border-b-4 transition-all duration-300",
-        isLocked
-            ? "bg-muted border-muted-foreground/30 text-muted-foreground"
-            : isActive
-                ? "bg-primary border-primary/50 text-primary-foreground shadow-[0_0_20px_rgba(var(--primary),0.5)]"
-                : "bg-yellow-400 border-yellow-600 text-yellow-900"
+        "relative flex items-center justify-center w-24 h-24 rounded-full border-b-[6px] transition-all duration-150 active:border-b-0 active:translate-y-[6px]",
+        getTypeStyles(mission.type, mission.status),
+        isActive && "animate-pulse-slow shadow-lg"
     );
 
     const content = (
@@ -43,43 +56,51 @@ const MissionNode: React.FC<MissionNodeProps> = ({ mission, index, isLeft }) => 
                 damping: 20,
                 delay: index * 0.1
             }}
-            whileHover={!isLocked ? { scale: 1.1, translateY: -5 } : {}}
-            className="relative z-10"
+            whileHover={!isLocked ? { scale: 1.05, translateY: -5 } : {}}
+            className="relative z-10 flex flex-col items-center"
         >
-            <div className={nodeBaseStyles}>
-                {isLocked && <Lock className="w-8 h-8 opacity-50" />}
-                {isActive && <Play className="w-8 h-8 ml-1" />}
-                {isCompleted && <Star className="w-8 h-8 fill-yellow-900" />}
-
-                {/* Pulse effect for active node */}
-                {isActive && (
-                    <span className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-20 animate-ping" />
-                )}
-            </div>
-
-            {/* Stars display for completed/active */}
+            {/* Stars Arc for Completed */}
             {!isLocked && (
-                <div className="absolute -top-2 left-1/2 -translate-x-1/2 flex gap-1">
+                <div className="absolute -top-6 flex gap-1 justify-center w-full">
                     {[1, 2, 3].map((star) => (
                         <Star
                             key={star}
                             className={cn(
-                                "w-4 h-4 transition-colors",
+                                "w-5 h-5 drop-shadow-sm",
                                 star <= mission.stars
-                                    ? "fill-yellow-400 text-yellow-600"
-                                    : "text-muted-foreground/30"
+                                    ? "fill-yellow-400 text-yellow-500"
+                                    : "fill-slate-200 text-slate-300"
                             )}
                         />
                     ))}
                 </div>
             )}
 
-            {/* Label */}
+            <div className={nodeBaseStyles}>
+                <div className="flex flex-col items-center">
+                    {isLocked ? (
+                        <Lock className="w-8 h-8 opacity-50" />
+                    ) : isCompleted ? (
+                        <Check className="w-10 h-10 stroke-[3]" />
+                    ) : (
+                        <Play className="w-10 h-10 fill-current" />
+                    )}
+                </div>
+
+                {/* Shine effect */}
+                {!isLocked && (
+                    <div className="absolute top-2 left-4 w-4 h-4 bg-white/20 rounded-full blur-[2px]" />
+                )}
+            </div>
+
+            {/* Label Badge */}
             <div className={cn(
-                "absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold border-2",
+                "absolute top-[calc(100%+8px)] whitespace-nowrap px-4 py-1.5 rounded-xl text-sm font-extrabold shadow-sm border-b-4",
                 isActive
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-card text-card-foreground border-border"
+                    ? "bg-white text-primary border-slate-200 text-base"
+                    : isLocked
+                        ? "bg-slate-100 text-slate-400 border-slate-200"
+                        : "bg-white text-slate-700 border-slate-200"
             )}>
                 {mission.title}
             </div>
@@ -88,7 +109,7 @@ const MissionNode: React.FC<MissionNodeProps> = ({ mission, index, isLeft }) => 
 
     if (isLocked) {
         return (
-            <div className="flex flex-col items-center">
+            <div className="pb-12 grayscale-[0.5] opacity-80 hover:opacity-100 transition-opacity">
                 {content}
             </div>
         );
@@ -96,19 +117,27 @@ const MissionNode: React.FC<MissionNodeProps> = ({ mission, index, isLeft }) => 
 
     return (
         <TooltipProvider>
-            <Tooltip>
+            <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                    <Link to={`/game?type=${mission.type}`}>
+                    <Link to={`/game?type=${mission.type}`} className="pb-12 block">
                         {content}
                     </Link>
                 </TooltipTrigger>
-                <TooltipContent side={isLeft ? "right" : "left"}>
-                    <div className="text-center">
-                        <p className="font-bold">{mission.title}</p>
-                        <p className="text-xs text-muted-foreground">{mission.description}</p>
-                        <Button size="sm" className="mt-2 w-full rounded-full">
-                            {isActive ? "Start" : "Practice"}
-                        </Button>
+                <TooltipContent
+                    side={isLeft ? "right" : "left"}
+                    className={cn(
+                        "p-4 rounded-2xl border-b-4 border-slate-200 font-bold text-center",
+                        "bg-white text-slate-800"
+                    )}
+                    sideOffset={10}
+                >
+                    <p className="text-lg">{mission.title}</p>
+                    <p className="text-sm text-slate-500 font-medium mb-2">{mission.description}</p>
+                    <div className={cn(
+                        "uppercase text-xs py-1 px-3 rounded-lg inline-block",
+                        isActive ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+                    )}>
+                        {isActive ? "Start Lesson" : "Review"}
                     </div>
                 </TooltipContent>
             </Tooltip>
