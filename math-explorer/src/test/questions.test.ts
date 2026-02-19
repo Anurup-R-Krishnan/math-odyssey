@@ -21,8 +21,8 @@ describe("Question Generation", () => {
     it("increases range with difficulty", () => {
       const easy = generateAdditionQuestion(1);
       const hard = generateAdditionQuestion(5);
-      // Hard questions can have larger operands
-      expect(hard.operandA! + hard.operandB!).toBeLessThanOrEqual(40);
+      // Hard questions can have larger operands (max 35+35=70 for diff 5)
+      expect(hard.operandA! + hard.operandB!).toBeLessThanOrEqual(80);
       expect(easy.operandA! + easy.operandB!).toBeGreaterThan(0);
     });
   });
