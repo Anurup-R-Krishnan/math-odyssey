@@ -184,3 +184,10 @@ function useToast() {
 }
 
 export { useToast, toast };
+
+export const _resetStateForTests = () => {
+  memoryState = { toasts: [] };
+  listeners.length = 0;
+  toastTimeouts.forEach((timeout) => clearTimeout(timeout));
+  toastTimeouts.clear();
+};
