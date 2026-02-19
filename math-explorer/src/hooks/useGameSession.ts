@@ -5,6 +5,9 @@ import {
   DifficultyState,
 } from "@/types/game";
 
+export const LEVEL_UP_THRESHOLD = 5;
+export const LEVEL_DOWN_THRESHOLD = 3;
+
 const SESSION_KEY = "neuromath_sessions";
 
 function generateSessionId(): string {
@@ -53,7 +56,7 @@ export function useGameSession() {
       setDifficulty((prev) => {
         if (attempt.correct) {
           const newCorrect = prev.consecutiveCorrect + 1;
-          if (newCorrect >= 5) {
+          if (newCorrect >= LEVEL_UP_THRESHOLD) {
             return {
               level: prev.level + 1,
               consecutiveCorrect: 0,
@@ -63,7 +66,7 @@ export function useGameSession() {
           return { ...prev, consecutiveCorrect: newCorrect, consecutiveWrong: 0 };
         } else {
           const newWrong = prev.consecutiveWrong + 1;
-          if (newWrong >= 3) {
+          if (newWrong >= LEVEL_DOWN_THRESHOLD) {
             return {
               level: Math.max(1, prev.level - 1),
               consecutiveCorrect: 0,
