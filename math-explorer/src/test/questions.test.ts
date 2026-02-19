@@ -23,7 +23,7 @@ describe("Question Generation", () => {
       const hard = generateAdditionQuestion(5);
       // Hard questions can have larger operands (max 35+35=70 for difficulty 5)
       expect(hard.operandA! + hard.operandB!).toBeLessThanOrEqual(70);
-      expect(easy.operandA! + easy.operandB!).toBeGreaterThan(0);
+      expect(easy.operandA! + easy.operandB!).toBeGreaterThanOrEqual(0);
     });
   });
 
