@@ -41,3 +41,14 @@ export interface DifficultyState {
   consecutiveCorrect: number;
   consecutiveWrong: number;
 }
+
+export type MissionStatus = "locked" | "active" | "completed";
+
+export interface Mission {
+  id: string;
+  title: string;
+  type: ProblemType;
+  status: MissionStatus;
+  description: string;
+  stars: number; // 0-3
+}
