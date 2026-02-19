@@ -17,9 +17,7 @@ import { saveAs } from "file-saver";
 const TEAM_NAME = "NeuroMath";
 
 const MEMBERS = [
-  { name: "Team Member 1", rollNo: "CB.EN.U4CSE001", role: "Developer" },
-  { name: "Team Member 2", rollNo: "CB.EN.U4CSE002", role: "Designer" },
-  { name: "Team Member 3", rollNo: "CB.EN.U4CSE003", role: "Tester" },
+  { name: "Anurup R Krishnan", rollNo: "CB.SC.U4CSE23155", role: "Developer" },
 ];
 
 function createBorderedCell(text: string, bold = false): TableCell {
