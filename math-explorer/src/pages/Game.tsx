@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { QuestionCard } from "@/components/game/QuestionCard";
 import { useGameSession } from "@/hooks/useGameSession";
+import { useMissionProgress } from "@/hooks/useMissionProgress";
 import { generateQuestion } from "@/data/questions";
 import { Question, QuestionAttempt } from "@/types/game";
 import { Progress } from "@/components/ui/progress";
@@ -25,10 +26,13 @@ const Game = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const urlType = searchParams.get("type");
+  const missionId = searchParams.get("missionId");
   const preselectedMode: GameMode | null = isValidMode(urlType) ? urlType : null;
 
   const { session, difficulty, startSession, recordAttempt, endSession } =
     useGameSession();
+  const { completeMission } = useMissionProgress();
+
   const [rollNo, setRollNo] = useState("");
   const [mode, setMode] = useState<GameMode | null>(null);
   const [pilot, setPilot] = useState<PilotIcon>("rocket");
@@ -38,9 +42,21 @@ const Game = () => {
 
   const totalQuestions = 10;
 
+  // Load saved roll number on mount
+  useEffect(() => {
+    const savedRollNo = localStorage.getItem("last_roll_no");
+    if (savedRollNo) {
+      setRollNo(savedRollNo);
+    }
+  }, []);
+
   const handleStart = useCallback(
     (selectedMode: GameMode) => {
       if (!rollNo.trim()) return;
+
+      // Save roll number
+      localStorage.setItem("last_roll_no", rollNo.trim());
+
       startSession(rollNo.trim());
       setMode(selectedMode);
       setCurrentQuestion(generateQuestion(selectedMode, 1));
@@ -65,13 +81,38 @@ const Game = () => {
     if (next >= totalQuestions) {
       endSession();
       setCurrentQuestion(null);
+
+      // Calculate stars based on accuracy
+      // > 90% = 3 stars, > 70% = 2 stars, > 50% = 1 star
+      const accuracy = (correctCount + (currentQuestion?.answer === (currentQuestion?.options.find(o => o === currentQuestion?.answer)) ? 1 : 0)) / totalQuestions;
+      // Note: correctCount state update might lag slightly if not careful, but logic here is simplified. 
+      // Actually correctCount is updated in handleComplete, but react state updates are batched/async.
+      // Better to calculate final stars in the render or useEffect? 
+      // Or pass final correct count. 
+      // Let's rely on the passed callback or simpler logic in the win screen effect.
       return;
     }
 
     if (mode) {
       setCurrentQuestion(generateQuestion(mode, difficulty.level));
     }
-  }, [questionsAnswered, mode, difficulty.level, endSession]);
+  }, [questionsAnswered, mode, difficulty.level, endSession, correctCount, totalQuestions]);
+
+  // Handle Game Over / Win
+  useEffect(() => {
+    if (!currentQuestion && questionsAnswered >= totalQuestions) {
+      // Game just finished
+      const finalAccuracy = (correctCount / totalQuestions) * 100;
+      let stars = 0;
+      if (finalAccuracy >= 90) stars = 3;
+      else if (finalAccuracy >= 70) stars = 2;
+      else if (finalAccuracy >= 50) stars = 1;
+
+      if (missionId && stars > 0) {
+        completeMission(missionId, stars);
+      }
+    }
+  }, [currentQuestion, questionsAnswered, totalQuestions, correctCount, missionId, completeMission]);
 
   const handleRestart = useCallback(() => {
     setMode(null);
@@ -85,7 +126,7 @@ const Game = () => {
     return (
       <section className="container max-w-2xl py-12 px-6 space-y-8 animate-in fade-in duration-500">
         <div className="text-center space-y-3">
-          <h1 className="text-3xl font-bold tracking-tight">Mission Briefing</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Mission Briefing</h1>
           <p className="text-muted-foreground">
             {preselectedMode
               ? `Get ready for the ${preselectedMode.charAt(0).toUpperCase() + preselectedMode.slice(1)} Mission! Enter your pilot ID to begin.`
@@ -93,7 +134,7 @@ const Game = () => {
           </p>
         </div>
 
-        <div className="max-w-md mx-auto space-y-8 bg-card border-2 border-primary/10 rounded-[2rem] p-8 shadow-sm">
+        <div className="max-w-md mx-auto space-y-8 bg-white border-2 border-slate-100 rounded-[2rem] p-8 shadow-sm">
           <div className="space-y-4">
             <Label className="text-base font-medium">Choose Your Ship</Label>
             <div className="flex justify-center gap-4">
@@ -108,8 +149,8 @@ const Game = () => {
                   aria-label={`Select ${p.label}`}
                   aria-pressed={pilot === p.id}
                   className={`p-4 rounded-2xl border-2 transition-all ${pilot === p.id
-                      ? "border-primary bg-primary/10 scale-110 shadow-md"
-                      : "border-transparent hover:bg-muted"
+                    ? "border-primary bg-primary/10 scale-110 shadow-md"
+                    : "border-transparent hover:bg-slate-50"
                     }`}
                 >
                   <p.icon className={`w-8 h-8 ${pilot === p.id ? "text-primary" : "text-muted-foreground"}`} />
@@ -179,12 +220,12 @@ const Game = () => {
     const accuracy = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
     return (
       <section className="container max-w-md py-12 px-6 space-y-8 animate-in zoom-in-95 duration-500">
-        <div className="bg-card border-2 border-primary/10 rounded-[2.5rem] p-10 text-center space-y-6 shadow-md">
-          <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mx-auto mb-2 text-secondary-foreground">
+        <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] p-10 text-center space-y-6 shadow-xl">
+          <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2 text-yellow-600">
             <Star className="w-10 h-10 fill-current" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold">Mission Accomplished!</h2>
+            <h2 className="text-2xl font-bold text-slate-900">Mission Accomplished!</h2>
             <p className="text-muted-foreground">
               Great job! You solved {correctCount} out of {totalQuestions} problems.
             </p>
@@ -200,8 +241,8 @@ const Game = () => {
 
           <div className="flex flex-col gap-3 pt-4">
             <Button size="lg" className="rounded-2xl h-14 text-base font-bold shadow-sm" onClick={handleRestart}>Play Again</Button>
-            <Button variant="outline" size="lg" className="rounded-2xl h-14 text-base" onClick={() => navigate("/dashboard")}>
-              View My Progress
+            <Button variant="outline" size="lg" className="rounded-2xl h-14 text-base" onClick={() => navigate("/")}>
+              Return to Map
             </Button>
           </div>
         </div>
@@ -273,5 +314,4 @@ const Game = () => {
     </section>
   );
 };
-
 export default Game;
