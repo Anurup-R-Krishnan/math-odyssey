@@ -23,26 +23,19 @@ const Dashboard = () => {
   const { getAllSessions, exportCSV } = useGameSession();
   const sessions = useMemo(() => getAllSessions(), [getAllSessions]);
 
-  const totalAttempts = useMemo(
-    () => sessions.reduce((sum, s) => sum + s.attempts.length, 0),
-    [sessions]
-  );
-  const totalCorrect = useMemo(
-    () =>
-      sessions.reduce(
-        (sum, s) => sum + s.attempts.filter((a) => a.correct).length,
-        0
-      ),
-    [sessions]
-  );
-  const totalHints = useMemo(
-    () =>
-      sessions.reduce(
-        (sum, s) => sum + s.attempts.filter((a) => a.hintUsed).length,
-        0
-      ),
-    [sessions]
-  );
+  const { totalAttempts, totalCorrect, totalHints } = useMemo(() => {
+    return sessions.reduce(
+      (acc, s) => {
+        for (const attempt of s.attempts) {
+          acc.totalAttempts++;
+          if (attempt.correct) acc.totalCorrect++;
+          if (attempt.hintUsed) acc.totalHints++;
+        }
+        return acc;
+      },
+      { totalAttempts: 0, totalCorrect: 0, totalHints: 0 }
+    );
+  }, [sessions]);
 
   const accuracyData = useMemo(() => {
     return sessions.map((s, i) => {
