@@ -1,7 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Download } from "lucide-react";
 
 const TEAM_MEMBERS = [
   {
@@ -25,12 +23,6 @@ const TEAM_MEMBERS = [
 ];
 
 const Members = () => {
-  const handleDownload = async () => {
-    // Dynamically import to keep initial bundle small
-    const { generateSubmissionZip } = await import("@/lib/docGenerator");
-    await generateSubmissionZip();
-  };
-
   return (
     <section className="container max-w-4xl py-12 px-6 space-y-12 animate-in fade-in duration-500">
       <div className="space-y-3">
@@ -58,21 +50,6 @@ const Members = () => {
           </Card>
         ))}
       </div>
-
-      <Card className="border-2 border-primary/10 rounded-[2rem] overflow-hidden shadow-sm">
-        <CardHeader className="bg-muted/30 pt-8 px-8">
-          <CardTitle className="text-xl font-bold">Mission Assets</CardTitle>
-        </CardHeader>
-        <CardContent className="p-8 space-y-4">
-          <p className="text-base text-muted-foreground leading-relaxed">
-            Download the full mission package containing development documentation and final evaluation screenshots.
-          </p>
-          <Button onClick={handleDownload} size="lg" className="rounded-xl h-14 px-8 font-bold shadow-sm">
-            <Download className="h-5 w-5 mr-3" />
-            Download Submission ZIP
-          </Button>
-        </CardContent>
-      </Card>
     </section>
   );
 };
