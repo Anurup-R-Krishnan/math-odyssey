@@ -63,31 +63,54 @@ const missions: Mission[] = [
   }
 ];
 
+const FloatingElement = ({ delay, duration, left, top, scale, children }: any) => (
+  <motion.div
+    initial={{ y: 0, rotate: 0 }}
+    animate={{ y: [0, -20, 0], rotate: [0, 10, -10, 0] }}
+    transition={{ duration, repeat: Infinity, delay, ease: "easeInOut" }}
+    className="absolute text-white/20 pointer-events-none z-0"
+    style={{ left, top, scale }}
+  >
+    {children}
+  </motion.div>
+);
+
 const Home = () => {
   return (
-    <section className="min-h-screen bg-gradient-to-b from-background to-secondary/20 pb-20">
-      <div className="container max-w-md mx-auto px-4 py-8">
+    <section className="min-h-screen bg-indigo-900 pb-20 relative overflow-hidden">
+      {/* Immersive Background */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-800 via-indigo-900 to-black z-0" />
+
+      {/* Floating Decor */}
+      <FloatingElement delay={0} duration={5} left="10%" top="15%" scale={1.5}><Shapes size={64} /></FloatingElement>
+      <FloatingElement delay={2} duration={7} left="80%" top="10%" scale={1.2}><PlusCircle size={48} /></FloatingElement>
+      <FloatingElement delay={1} duration={6} left="15%" top="60%" scale={1}><MinusCircle size={48} /></FloatingElement>
+      <FloatingElement delay={3} duration={8} left="85%" top="50%" scale={1.8}><Star size={56} /></FloatingElement>
+      <FloatingElement delay={0.5} duration={9} left="50%" top="85%" scale={2}><Trophy size={120} className="text-white/5" /></FloatingElement>
+
+
+      <div className="container max-w-md mx-auto px-4 py-8 relative z-10">
 
         {/* Header Area */}
-        <div className="text-center space-y-2 mb-8">
+        <div className="text-center space-y-2 mb-12 mt-4">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full font-bold shadow-sm"
+            className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-indigo-100 px-4 py-1.5 rounded-full font-bold shadow-lg"
           >
-            <Trophy className="w-5 h-5" />
-            <span>Unit 1: Number Operations</span>
+            <Trophy className="w-4 h-4 text-yellow-400" />
+            <span className="text-sm tracking-wide">Unit 1: Number Operations</span>
           </motion.div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-primary">
-            Mission Path
+          <h1 className="text-4xl font-black tracking-tight text-white drop-shadow-md">
+            Mission Map
           </h1>
-          <p className="text-muted-foreground text-sm">
-            Complete stations to unlock new challenges!
+          <p className="text-indigo-200 text-lg font-medium">
+            Your journey to math mastery starts here!
           </p>
         </div>
 
         {/* The Mission Map */}
-        <div className="relative">
+        <div className="relative min-h-[500px]">
           <MissionMap missions={missions} />
         </div>
 
