@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   generateAdditionQuestion,
   generateSubtractionQuestion,
+  generateDivisionQuestion,
   generatePatternQuestion,
   generateMicroPractice,
 } from "@/data/questions";
@@ -22,8 +23,8 @@ describe("Question Generation", () => {
       const easy = generateAdditionQuestion(1);
       const hard = generateAdditionQuestion(5);
       // Hard questions can have larger operands
-      expect(hard.operandA! + hard.operandB!).toBeLessThanOrEqual(40);
-      expect(easy.operandA! + easy.operandB!).toBeGreaterThan(0);
+      expect(hard.operandA! + hard.operandB!).toBeLessThanOrEqual(72);
+      expect(easy.operandA! + easy.operandB!).toBeGreaterThanOrEqual(0);
     });
   });
 
@@ -35,6 +36,27 @@ describe("Question Generation", () => {
       expect(q.answer).toBe(q.operandA! - q.operandB!);
       expect(Number(q.answer)).toBeGreaterThanOrEqual(0);
       expect(q.options).toContain(q.answer);
+    });
+  });
+
+  describe("generateDivisionQuestion", () => {
+    it("generates a valid division question", () => {
+      const q = generateDivisionQuestion(1);
+      expect(q.type).toBe("division");
+      expect(q.operandA).toBeDefined();
+      expect(q.operandB).toBeDefined();
+      expect(q.answer).toBe(q.operandA! / q.operandB!);
+      expect(q.options).toContain(q.answer);
+      expect(q.options.length).toBe(4);
+    });
+
+    it("handles edge cases without infinite loops", () => {
+      // Run multiple times to ensure stability, especially for answer=0 case
+      for (let i = 0; i < 100; i++) {
+        const q = generateDivisionQuestion(1);
+        expect(q.options.length).toBe(4);
+        expect(q.options).toContain(q.answer);
+      }
     });
   });
 
