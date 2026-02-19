@@ -193,7 +193,7 @@ export function generateDivisionQuestion(difficulty: number): Question {
   const distractors = new Set<number>();
   distractors.add(answer);
   while (distractors.size < 4) {
-    const d = answer + Math.floor(Math.random() * 5) - 2;
+    const d = answer + Math.floor(Math.random() * 7) - 3;
     if (d >= 0 && d !== answer) distractors.add(d);
   }
 
