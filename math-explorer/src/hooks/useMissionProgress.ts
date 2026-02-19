@@ -7,61 +7,74 @@ const STORAGE_KEY = "neuromath_mission_progress";
 // Status and stars will be overridden by storage
 const INITIAL_MISSIONS: Mission[] = [
     {
-        id: "addition-1",
+        id: "add-1",
         title: "Addition Basics",
         type: "addition",
-        // First mission is always active if nothing stored
         status: "active",
-        description: "Learn to add single digit numbers.",
+        description: "Start your journey with simple sums.",
         stars: 0,
+        initialLevel: 1,
+        iconType: "star"
     },
     {
-        id: "addition-2",
-        title: "More Addition",
-        type: "addition",
-        status: "locked",
-        description: "Add numbers up to 20.",
-        stars: 0,
-    },
-    {
-        id: "subtraction-1",
+        id: "sub-1",
         title: "Subtraction Start",
         type: "subtraction",
-        status: "locked",
-        description: "Take away numbers from 10.",
+        status: "active",
+        description: "Learn to take away numbers.",
         stars: 0,
+        initialLevel: 1,
+        iconType: "star"
     },
     {
-        id: "subtraction-2",
-        title: "Subtraction Pro",
-        type: "subtraction",
-        status: "locked",
-        description: "Complex subtraction problems.",
+        id: "mult-1",
+        title: "Multiplication Magic",
+        type: "multiplication",
+        status: "active",
+        description: "Learn to multiply numbers.",
         stars: 0,
+        initialLevel: 1,
+        iconType: "chest"
     },
     {
-        id: "pattern-1",
+        id: "div-1",
+        title: "Division Dash",
+        type: "division",
+        status: "active",
+        description: "Divide and conquer!",
+        stars: 0,
+        initialLevel: 1,
+        iconType: "chest"
+    },
+    {
+        id: "frac-1",
+        title: "Fraction Fun",
+        type: "fraction",
+        status: "active",
+        description: "Understand parts of a whole.",
+        stars: 0,
+        initialLevel: 1,
+        iconType: "trophy"
+    },
+    {
+        id: "pat-1",
         title: "Pattern Recognition",
         type: "pattern",
-        status: "locked",
-        description: "Find the next shape or number.",
+        status: "active",
+        description: "Spot the sequence!",
         stars: 0,
-    },
-    {
-        id: "pattern-2",
-        title: "Advanced Patterns",
-        type: "pattern",
-        status: "locked",
-        description: "Complete complex number sequences.",
-        stars: 0,
+        initialLevel: 1,
+        iconType: "star"
     },
     {
         id: "boss-1",
         title: "Math Master",
-        type: "addition",
-        status: "locked",
-        description: "Prove your skills in the final challenge!",
+        type: "addition", // Boss could be mixed, keeping type valid
+        status: "active",
+        description: "The ultimate test of your skills!",
         stars: 0,
+        initialLevel: 3,
+        iconType: "crown"
     }
 ];
 

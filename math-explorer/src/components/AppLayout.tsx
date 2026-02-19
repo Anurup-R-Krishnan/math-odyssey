@@ -40,7 +40,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground">
               ∑
             </div>
-            <span className="hidden sm:inline">NeuroMath</span>
+            <span className="hidden sm:inline">MathOdyssey</span>
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-4">
@@ -141,7 +141,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       <footer className="border-t py-4 text-center text-xs text-muted-foreground">
-        NeuroMath -- Visual Game-Based Math Learning for Autism
+        MathOdyssey -- Visual Game-Based Math Learning for Autism
       </footer>
     </div>
   );

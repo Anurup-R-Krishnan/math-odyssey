@@ -32,7 +32,7 @@ export function useGameSession() {
     consecutiveWrong: 0,
   });
 
-  const startSession = useCallback((rollNo: string) => {
+  const startSession = useCallback((rollNo: string, initialLevel: number = 1) => {
     const newSession: GameSession = {
       sessionId: generateSessionId(),
       rollNo,
@@ -40,7 +40,7 @@ export function useGameSession() {
       startedAt: Date.now(),
     };
     setSession(newSession);
-    setDifficulty({ level: 1, consecutiveCorrect: 0, consecutiveWrong: 0 });
+    setDifficulty({ level: initialLevel, consecutiveCorrect: 0, consecutiveWrong: 0 });
   }, []);
 
   const recordAttempt = useCallback(

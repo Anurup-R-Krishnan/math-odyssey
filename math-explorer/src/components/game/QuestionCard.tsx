@@ -220,6 +220,28 @@ export function QuestionCard({
               </div>
             )}
 
+          {/* Fraction Visualizer */}
+          {activeQuestion.type === "fraction" &&
+            activeQuestion.operandA !== undefined &&
+            activeQuestion.operandB !== undefined && (
+              <div className="flex justify-center p-4">
+                <div className="relative w-32 h-32">
+                  <svg viewBox="0 0 32 32" className="w-full h-full -rotate-90">
+                    <circle cx="16" cy="16" r="16" fill="#e2e8f0" /> {/* Background Circle */}
+                    <path
+                      d={`M 16 16 L 32 16 A 16 16 0 ${activeQuestion.operandA / activeQuestion.operandB > 0.5 ? 1 : 0} 1 ${16 + 16 * Math.cos(2 * Math.PI * (activeQuestion.operandA / activeQuestion.operandB))
+                        } ${16 + 16 * Math.sin(2 * Math.PI * (activeQuestion.operandA / activeQuestion.operandB))
+                        } Z`}
+                      fill="#6366f1"
+                      stroke="white"
+                      strokeWidth="1"
+                    />
+                  </svg>
+                </div>
+              </div>
+            )
+          }
+
           {/* Answer reveal */}
           {phase === "revealed" && (
             <div className="text-center">

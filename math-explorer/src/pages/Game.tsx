@@ -13,10 +13,10 @@ import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import { Star, Rocket, Target, Flag, Ghost, Zap } from "lucide-react";
 
-type GameMode = "addition" | "subtraction" | "pattern";
+type GameMode = "addition" | "subtraction" | "multiplication" | "division" | "fraction" | "pattern";
 type PilotIcon = "rocket" | "ghost" | "zap";
 
-const VALID_MODES: GameMode[] = ["addition", "subtraction", "pattern"];
+const VALID_MODES: GameMode[] = ["addition", "subtraction", "multiplication", "division", "fraction", "pattern"];
 
 function isValidMode(value: string | null): value is GameMode {
   return VALID_MODES.includes(value as GameMode);
@@ -27,6 +27,9 @@ const Game = () => {
   const navigate = useNavigate();
   const urlType = searchParams.get("type");
   const missionId = searchParams.get("missionId");
+  const levelParam = searchParams.get("level");
+  const initialLevel = levelParam ? parseInt(levelParam, 10) : 1;
+
   const preselectedMode: GameMode | null = isValidMode(urlType) ? urlType : null;
 
   const { session, difficulty, startSession, recordAttempt, endSession } =
@@ -57,13 +60,13 @@ const Game = () => {
       // Save roll number
       localStorage.setItem("last_roll_no", rollNo.trim());
 
-      startSession(rollNo.trim());
+      startSession(rollNo.trim(), initialLevel);
       setMode(selectedMode);
-      setCurrentQuestion(generateQuestion(selectedMode, 1));
+      setCurrentQuestion(generateQuestion(selectedMode, initialLevel));
       setQuestionsAnswered(0);
       setCorrectCount(0);
     },
-    [rollNo, startSession]
+    [rollNo, startSession, initialLevel]
   );
 
   const handleComplete = useCallback(
@@ -193,6 +196,9 @@ const Game = () => {
                   [
                     { key: "addition" as GameMode, label: "Addition Station", desc: "Combine numbers together" },
                     { key: "subtraction" as GameMode, label: "Subtraction Station", desc: "Find what remains" },
+                    { key: "multiplication" as GameMode, label: "Multiplication Magic", desc: "Learn to multiply" },
+                    { key: "division" as GameMode, label: "Division Dash", desc: "Divide and conquer" },
+                    { key: "fraction" as GameMode, label: "Fraction Fun", desc: "Parts of a whole" },
                     { key: "pattern" as GameMode, label: "Pattern Station", desc: "Follow the sequence" },
                   ] as const
                 ).map((m) => (

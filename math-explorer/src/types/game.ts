@@ -1,4 +1,4 @@
-export type ProblemType = "addition" | "subtraction" | "pattern";
+export type ProblemType = "addition" | "subtraction" | "multiplication" | "division" | "fraction" | "pattern";
 
 export interface Question {
   id: string;
@@ -51,4 +51,6 @@ export interface Mission {
   status: MissionStatus;
   description: string;
   stars: number; // 0-3
+  initialLevel?: number;
+  iconType?: "star" | "chest" | "crown" | "trophy";
 }

@@ -75,11 +75,11 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
                 className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 overflow-visible"
                 style={{ height: missions.length * NODE_HEIGHT + 150 }}
             >
-                {/* Glow effect for path */}
+                {/* Glow effect for path (adjusted for light theme) */}
                 <path
                     d={generatePath()}
                     fill="none"
-                    stroke="rgba(255, 255, 255, 0.1)"
+                    stroke="rgba(148, 163, 184, 0.2)" // slate-400/20
                     strokeWidth="20"
                     strokeLinecap="round"
                     className="blur-md"
@@ -89,7 +89,7 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
                 <path
                     d={generatePath()}
                     fill="none"
-                    stroke="rgba(255, 255, 255, 0.2)"
+                    stroke="rgba(148, 163, 184, 0.4)" // slate-400/40
                     strokeWidth="12"
                     strokeLinecap="round"
                     strokeDasharray="20 15"
@@ -99,7 +99,7 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
                 <motion.path
                     d={generatePath()}
                     fill="none"
-                    stroke="rgba(255, 255, 255, 0.4)"
+                    stroke="rgba(99, 102, 241, 0.4)" // indigo-500/40
                     strokeWidth="4"
                     strokeLinecap="round"
                     strokeDasharray="10 10"
