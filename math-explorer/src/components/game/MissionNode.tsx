@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import {
     Tooltip,
     TooltipContent,
-    TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -122,34 +121,32 @@ const MissionNode: React.FC<MissionNodeProps> = ({ mission, index, isLeft }) => 
     }
 
     return (
-        <TooltipProvider>
-            <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                    <Link to={`/game?type=${mission.type}&missionId=${mission.id}&level=${mission.initialLevel || 1}`} className="pb-12 block">
-                        {content}
-                    </Link>
-                </TooltipTrigger>
-                <TooltipContent
-                    side={isLeft ? "right" : "left"}
-                    className={cn(
-                        "p-4 rounded-2xl border-b-4 border-slate-200 font-bold text-center",
-                        "bg-white text-slate-800"
-                    )}
-                    sideOffset={10}
-                >
-                    <div className="text-center space-y-1">
-                        <p className="text-lg">{mission.title}</p>
-                        <p className="text-sm text-slate-500 font-medium mb-2">{mission.description}</p>
-                        <div className={cn(
-                            "uppercase text-xs py-1 px-3 rounded-lg inline-block",
-                            isActive ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
-                        )}>
-                            {isActive ? "Start Lesson" : "Review"}
-                        </div>
+        <Tooltip delayDuration={0}>
+            <TooltipTrigger asChild>
+                <Link to={`/game?type=${mission.type}&missionId=${mission.id}&level=${mission.initialLevel || 1}`} className="pb-12 block">
+                    {content}
+                </Link>
+            </TooltipTrigger>
+            <TooltipContent
+                side={isLeft ? "right" : "left"}
+                className={cn(
+                    "p-4 rounded-2xl border-b-4 border-slate-200 font-bold text-center",
+                    "bg-white text-slate-800"
+                )}
+                sideOffset={10}
+            >
+                <div className="text-center space-y-1">
+                    <p className="text-lg">{mission.title}</p>
+                    <p className="text-sm text-slate-500 font-medium mb-2">{mission.description}</p>
+                    <div className={cn(
+                        "uppercase text-xs py-1 px-3 rounded-lg inline-block",
+                        isActive ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+                    )}>
+                        {isActive ? "Start Lesson" : "Review"}
                     </div>
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
+                </div>
+            </TooltipContent>
+        </Tooltip>
     );
 };
 
