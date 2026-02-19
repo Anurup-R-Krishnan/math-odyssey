@@ -15,6 +15,16 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
 }
 
+function generateNumericDistractors(answer: number, range: number, offset: number): number[] {
+  const distractors = new Set<number>();
+  distractors.add(answer);
+  while (distractors.size < 4) {
+    const d = answer + Math.floor(Math.random() * range) - offset;
+    if (d >= 0 && d !== answer) distractors.add(d);
+  }
+  return [...distractors];
+}
+
 export function generateAdditionQuestion(difficulty: number): Question {
   let a, b;
   // Tiered difficulty
@@ -35,12 +45,7 @@ export function generateAdditionQuestion(difficulty: number): Question {
 
   const answer = a + b;
 
-  const distractors = new Set<number>();
-  distractors.add(answer);
-  while (distractors.size < 4) {
-    const d = answer + Math.floor(Math.random() * 7) - 3;
-    if (d >= 0 && d !== answer) distractors.add(d);
-  }
+  const distractors = generateNumericDistractors(answer, 7, 3);
 
   return {
     id: generateId(),
@@ -49,7 +54,7 @@ export function generateAdditionQuestion(difficulty: number): Question {
     operandA: a,
     operandB: b,
     answer,
-    options: shuffleArray([...distractors]),
+    options: shuffleArray(distractors),
     difficulty,
   };
 }
@@ -74,12 +79,7 @@ export function generateSubtractionQuestion(difficulty: number): Question {
 
   const answer = a - b;
 
-  const distractors = new Set<number>();
-  distractors.add(answer);
-  while (distractors.size < 4) {
-    const d = answer + Math.floor(Math.random() * 7) - 3;
-    if (d >= 0 && d !== answer) distractors.add(d);
-  }
+  const distractors = generateNumericDistractors(answer, 7, 3);
 
   return {
     id: generateId(),
@@ -88,7 +88,7 @@ export function generateSubtractionQuestion(difficulty: number): Question {
     operandA: a,
     operandB: b,
     answer,
-    options: shuffleArray([...distractors]),
+    options: shuffleArray(distractors),
     difficulty,
   };
 }
@@ -157,12 +157,7 @@ export function generateMultiplicationQuestion(difficulty: number): Question {
   }
   const answer = a * b;
 
-  const distractors = new Set<number>();
-  distractors.add(answer);
-  while (distractors.size < 4) {
-    const d = answer + Math.floor(Math.random() * 10) - 5;
-    if (d >= 0 && d !== answer) distractors.add(d);
-  }
+  const distractors = generateNumericDistractors(answer, 10, 5);
 
   return {
     id: generateId(),
@@ -171,7 +166,7 @@ export function generateMultiplicationQuestion(difficulty: number): Question {
     operandA: a,
     operandB: b,
     answer,
-    options: shuffleArray([...distractors]),
+    options: shuffleArray(distractors),
     difficulty
   };
 }
@@ -190,12 +185,7 @@ export function generateDivisionQuestion(difficulty: number): Question {
     a = answer * b;
   }
 
-  const distractors = new Set<number>();
-  distractors.add(answer);
-  while (distractors.size < 4) {
-    const d = answer + Math.floor(Math.random() * 5) - 2;
-    if (d >= 0 && d !== answer) distractors.add(d);
-  }
+  const distractors = generateNumericDistractors(answer, 5, 2);
 
   return {
     id: generateId(),
@@ -204,7 +194,7 @@ export function generateDivisionQuestion(difficulty: number): Question {
     operandA: a,
     operandB: b,
     answer,
-    options: shuffleArray([...distractors]),
+    options: shuffleArray(distractors),
     difficulty
   };
 }

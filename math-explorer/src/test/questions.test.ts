@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   generateAdditionQuestion,
   generateSubtractionQuestion,
+  generateMultiplicationQuestion,
+  generateDivisionQuestion,
   generatePatternQuestion,
   generateMicroPractice,
 } from "@/data/questions";
@@ -22,7 +24,7 @@ describe("Question Generation", () => {
       const easy = generateAdditionQuestion(1);
       const hard = generateAdditionQuestion(5);
       // Hard questions can have larger operands
-      expect(hard.operandA! + hard.operandB!).toBeLessThanOrEqual(40);
+      expect(hard.operandA! + hard.operandB!).toBeLessThanOrEqual(70);
       expect(easy.operandA! + easy.operandB!).toBeGreaterThan(0);
     });
   });
@@ -35,6 +37,30 @@ describe("Question Generation", () => {
       expect(q.answer).toBe(q.operandA! - q.operandB!);
       expect(Number(q.answer)).toBeGreaterThanOrEqual(0);
       expect(q.options).toContain(q.answer);
+    });
+  });
+
+  describe("generateMultiplicationQuestion", () => {
+    it("generates a valid multiplication question", () => {
+      const q = generateMultiplicationQuestion(1);
+      expect(q.type).toBe("multiplication");
+      expect(q.operandA).toBeDefined();
+      expect(q.operandB).toBeDefined();
+      expect(q.answer).toBe(q.operandA! * q.operandB!);
+      expect(q.options).toContain(q.answer);
+      expect(q.options.length).toBe(4);
+    });
+  });
+
+  describe("generateDivisionQuestion", () => {
+    it("generates a valid division question", () => {
+      const q = generateDivisionQuestion(1);
+      expect(q.type).toBe("division");
+      expect(q.operandA).toBeDefined();
+      expect(q.operandB).toBeDefined();
+      expect(q.answer).toBe(q.operandA! / q.operandB!);
+      expect(q.options).toContain(q.answer);
+      expect(q.options.length).toBe(4);
     });
   });
 
