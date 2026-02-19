@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { useFocusMode } from "@/hooks/useFocusMode";
 
@@ -26,7 +27,11 @@ export function ObjectVisualizer({
   label,
 }: ObjectVisualizerProps) {
   const { shouldAnimate } = useFocusMode();
-  const dots = Array.from({ length: count }, (_, i) => i);
+  const dots = useMemo(() => {
+    const arr = new Array(count);
+    for (let i = 0; i < count; i++) arr[i] = i;
+    return arr;
+  }, [count]);
   const colorClass = DOT_COLORS[color] ?? DOT_COLORS.default;
 
   return (
