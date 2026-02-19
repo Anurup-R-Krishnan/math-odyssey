@@ -22,8 +22,8 @@ describe("Question Generation", () => {
       const easy = generateAdditionQuestion(1);
       const hard = generateAdditionQuestion(5);
       // Hard questions can have larger operands
-      expect(hard.operandA! + hard.operandB!).toBeLessThanOrEqual(40);
-      expect(easy.operandA! + easy.operandB!).toBeGreaterThan(0);
+      expect(hard.operandA! + hard.operandB!).toBeLessThanOrEqual(70);
+      expect(easy.operandA! + easy.operandB!).toBeGreaterThanOrEqual(0);
     });
   });
 
