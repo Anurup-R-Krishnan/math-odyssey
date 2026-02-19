@@ -19,6 +19,24 @@ export const hintTemplates: Record<ProblemType, HintTemplate> = {
     hint2: "Which color repeats after two steps?",
     revealMessage: "Follow along as the pattern plays out.",
   },
+  multiplication: {
+    type: "multiplication",
+    hint1: "Think of it as repeated addition.",
+    hint2: "Count the total items in all groups.",
+    revealMessage: "Watch the groups combine to make the product.",
+  },
+  division: {
+    type: "division",
+    hint1: "Think about sharing equally.",
+    hint2: "Split the total into equal groups.",
+    revealMessage: "Watch how the items are distributed equally.",
+  },
+  fraction: {
+    type: "fraction",
+    hint1: "Look at the shaded parts compared to the whole.",
+    hint2: "The top number is the shaded parts; the bottom is the total parts.",
+    revealMessage: "Here is the fraction representing the shaded part.",
+  },
 };
 
 /**

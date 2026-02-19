@@ -38,6 +38,21 @@ describe("Hint Engine", () => {
       expect(hint).toBe("Which color repeats after two steps?");
     });
 
+    it("returns hints for multiplication", () => {
+      expect(getHintForAttempt("multiplication", 1)).toBe("Think of it as repeated addition.");
+      expect(getHintForAttempt("multiplication", 2)).toBe("Count the total items in all groups.");
+    });
+
+    it("returns hints for division", () => {
+      expect(getHintForAttempt("division", 1)).toBe("Think about sharing equally.");
+      expect(getHintForAttempt("division", 2)).toBe("Split the total into equal groups.");
+    });
+
+    it("returns hints for fraction", () => {
+      expect(getHintForAttempt("fraction", 1)).toBe("Look at the shaded parts compared to the whole.");
+      expect(getHintForAttempt("fraction", 2)).toBe("The top number is the shaded parts; the bottom is the total parts.");
+    });
+
     it("returns null for attempt numbers beyond 3", () => {
       expect(getHintForAttempt("addition", 4)).toBeNull();
       expect(getHintForAttempt("addition", 10)).toBeNull();
@@ -60,6 +75,24 @@ describe("Hint Engine", () => {
     it("returns correct reveal message for pattern", () => {
       expect(getRevealMessage("pattern")).toBe(
         "Follow along as the pattern plays out."
+      );
+    });
+
+    it("returns correct reveal message for multiplication", () => {
+      expect(getRevealMessage("multiplication")).toBe(
+        "Watch the groups combine to make the product."
+      );
+    });
+
+    it("returns correct reveal message for division", () => {
+      expect(getRevealMessage("division")).toBe(
+        "Watch how the items are distributed equally."
+      );
+    });
+
+    it("returns correct reveal message for fraction", () => {
+      expect(getRevealMessage("fraction")).toBe(
+        "Here is the fraction representing the shaded part."
       );
     });
   });
