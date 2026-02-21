@@ -22,6 +22,21 @@ function isValidMode(value: string | null): value is GameMode {
   return VALID_MODES.includes(value as GameMode);
 }
 
+const PILOT_ICONS = [
+  { id: "rocket" as PilotIcon, icon: Rocket, label: "Rocket Ship" },
+  { id: "ghost" as PilotIcon, icon: Ghost, label: "Ghost Ship" },
+  { id: "zap" as PilotIcon, icon: Zap, label: "Zap Ship" },
+] as const;
+
+const GAME_MODES = [
+  { key: "addition" as GameMode, label: "Addition Station", desc: "Combine numbers together" },
+  { key: "subtraction" as GameMode, label: "Subtraction Station", desc: "Find what remains" },
+  { key: "multiplication" as GameMode, label: "Multiplication Magic", desc: "Learn to multiply" },
+  { key: "division" as GameMode, label: "Division Dash", desc: "Divide and conquer" },
+  { key: "fraction" as GameMode, label: "Fraction Fun", desc: "Parts of a whole" },
+  { key: "pattern" as GameMode, label: "Pattern Station", desc: "Follow the sequence" },
+] as const;
+
 const Game = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -141,11 +156,7 @@ const Game = () => {
           <div className="space-y-4">
             <Label className="text-base font-medium">Choose Your Ship</Label>
             <div className="flex justify-center gap-4">
-              {[
-                { id: "rocket" as PilotIcon, icon: Rocket, label: "Rocket Ship" },
-                { id: "ghost" as PilotIcon, icon: Ghost, label: "Ghost Ship" },
-                { id: "zap" as PilotIcon, icon: Zap, label: "Zap Ship" },
-              ].map((p) => (
+              {PILOT_ICONS.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => setPilot(p.id)}
@@ -192,16 +203,7 @@ const Game = () => {
             <div className="space-y-4">
               <Label className="text-base font-medium">Choose Your Mission</Label>
               <div className="grid grid-cols-1 gap-3">
-                {(
-                  [
-                    { key: "addition" as GameMode, label: "Addition Station", desc: "Combine numbers together" },
-                    { key: "subtraction" as GameMode, label: "Subtraction Station", desc: "Find what remains" },
-                    { key: "multiplication" as GameMode, label: "Multiplication Magic", desc: "Learn to multiply" },
-                    { key: "division" as GameMode, label: "Division Dash", desc: "Divide and conquer" },
-                    { key: "fraction" as GameMode, label: "Fraction Fun", desc: "Parts of a whole" },
-                    { key: "pattern" as GameMode, label: "Pattern Station", desc: "Follow the sequence" },
-                  ] as const
-                ).map((m) => (
+                {GAME_MODES.map((m) => (
                   <Button
                     key={m.key}
                     variant="outline"
