@@ -19,6 +19,56 @@ type ChartContextProps = {
 
 const ChartContext = React.createContext<ChartContextProps | null>(null);
 
+// Helper functions for style hashing
+const stringToHash = (str: string) => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return "h" + Math.abs(hash).toString(16);
+};
+
+const getColorConfig = (config: ChartConfig) => {
+  return Object.entries(config)
+    .filter(([_, c]) => c.theme || c.color)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, itemConfig]) => ({
+      key,
+      color: itemConfig.color,
+      theme: itemConfig.theme,
+    }));
+};
+
+// Style Registry
+const styleRegistry = new Map<string, { count: number; element: HTMLStyleElement }>();
+
+const registerStyle = (id: string, css: string) => {
+  const entry = styleRegistry.get(id);
+  if (entry) {
+    entry.count++;
+    return;
+  }
+  const element = document.createElement("style");
+  element.setAttribute("data-chart-style", id);
+  element.innerHTML = css;
+  document.head.appendChild(element);
+  styleRegistry.set(id, { count: 1, element });
+};
+
+const unregisterStyle = (id: string) => {
+  const entry = styleRegistry.get(id);
+  if (!entry) return;
+  entry.count--;
+  if (entry.count <= 0) {
+    if (entry.element.parentNode) {
+      entry.element.parentNode.removeChild(entry.element);
+    }
+    styleRegistry.delete(id);
+  }
+};
+
 function useChart() {
   const context = React.useContext(ChartContext);
 
@@ -37,7 +87,13 @@ const ChartContainer = React.forwardRef<
   }
 >(({ id, className, children, config, ...props }, ref) => {
   const uniqueId = React.useId();
-  const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
+  const chartId = React.useMemo(() => {
+    if (id) {
+      return `chart-${id}`;
+    }
+    const hash = stringToHash(JSON.stringify(getColorConfig(config)));
+    return `chart-${hash}`;
+  }, [id, config]);
 
   return (
     <ChartContext.Provider value={{ config }}>
@@ -59,18 +115,19 @@ const ChartContainer = React.forwardRef<
 ChartContainer.displayName = "Chart";
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const colorConfig = Object.entries(config).filter(([_, config]) => config.theme || config.color);
+  const colorConfig = React.useMemo(
+    () => Object.entries(config).filter(([_, config]) => config.theme || config.color),
+    [config],
+  );
 
-  if (!colorConfig.length) {
-    return null;
-  }
+  React.useLayoutEffect(() => {
+    if (!colorConfig.length) {
+      return;
+    }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
+    const css = Object.entries(THEMES)
+      .map(
+        ([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
@@ -80,11 +137,14 @@ ${colorConfig
   .join("\n")}
 }
 `,
-          )
-          .join("\n"),
-      }}
-    />
-  );
+      )
+      .join("\n");
+
+    registerStyle(id, css);
+    return () => unregisterStyle(id);
+  }, [id, colorConfig]);
+
+  return null;
 };
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
