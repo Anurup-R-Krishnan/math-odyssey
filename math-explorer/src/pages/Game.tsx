@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { QuestionCard } from "@/components/game/QuestionCard";
 import { useGameSession } from "@/hooks/useGameSession";
 import { useMissionProgress } from "@/hooks/useMissionProgress";
@@ -54,6 +55,8 @@ const Game = () => {
   const [rollNo, setRollNo] = useState("");
   const [mode, setMode] = useState<GameMode | null>(null);
   const [pilot, setPilot] = useState<PilotIcon>("rocket");
+  const [inputMode, setInputMode] = useState<"multiple" | "draw">("multiple");
+  const [useTensorFlow, setUseTensorFlow] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -172,6 +175,38 @@ const Game = () => {
               ))}
             </div>
           </div>
+
+          <div className="space-y-3">
+            <Label className="text-base font-medium">Answer Input Mode</Label>
+            <div className="flex items-center space-x-3">
+              <Label htmlFor="input-mode" className="text-sm text-muted-foreground">Draw</Label>
+              <Switch
+                id="input-mode"
+                checked={inputMode === "draw"}
+                onCheckedChange={(checked) => setInputMode(checked ? "draw" : "multiple")}
+              />
+              <span className="text-sm text-muted-foreground">
+                {inputMode === "draw" ? "Draw answers" : "Select from options"}
+              </span>
+            </div>
+          </div>
+
+          {inputMode === "draw" && (
+            <div className="space-y-3">
+              <Label className="text-base font-medium">Recognition Engine</Label>
+              <div className="flex items-center space-x-3">
+                <Label htmlFor="tf-mode" className="text-sm text-muted-foreground">Geometric</Label>
+                <Switch
+                  id="tf-mode"
+                  checked={useTensorFlow}
+                  onCheckedChange={setUseTensorFlow}
+                />
+                <span className="text-sm text-muted-foreground">
+                  {useTensorFlow ? "AI (TensorFlow)" : "Pattern matching"}
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-3">
             <Label htmlFor="rollno" className="text-base font-medium">Pilot ID (Roll Number)</Label>
@@ -317,6 +352,8 @@ const Game = () => {
           question={currentQuestion}
           onComplete={handleComplete}
           onNextQuestion={handleNext}
+          inputMode={inputMode}
+          useTensorFlow={useTensorFlow}
         />
       )}
     </section>

@@ -1,8 +1,10 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HintDisplay } from "@/components/game/HintDisplay";
+import { MultipleChoiceInput } from "@/components/game/MultipleChoiceInput";
+import { DrawingCanvas } from "@/components/game/DrawingCanvas";
 import {
   ObjectVisualizer,
   PatternVisualizer,
@@ -21,6 +23,8 @@ interface QuestionCardProps {
   question: Question;
   onComplete: (attempt: QuestionAttempt) => void;
   onNextQuestion: () => void;
+  inputMode: "multiple" | "draw";
+  useTensorFlow?: boolean;
 }
 
 type Phase = "answering" | "revealed" | "microPractice" | "complete";
@@ -29,6 +33,8 @@ export function QuestionCard({
   question,
   onComplete,
   onNextQuestion,
+  inputMode,
+  useTensorFlow = true,
 }: QuestionCardProps) {
   const { addStar } = useStars();
   const [attemptCount, setAttemptCount] = useState(0);
@@ -43,15 +49,49 @@ export function QuestionCard({
   const [microQuestion, setMicroQuestion] = useState<Question | null>(null);
   const [microAttempts, setMicroAttempts] = useState(0);
 
-  // Determine active question based on phase
-  const activeQuestion = phase === "microPractice" && microQuestion ? microQuestion : question;
+  // Reset states when question changes
+  useEffect(() => {
+    setAttemptCount(0);
+    setCurrentHint(null);
+    setPhase("answering");
+    setSelectedOption(null);
+    setIsCorrect(false);
+    setShowFadeOut(false);
+    setMicroQuestion(null);
+    setMicroAttempts(0);
+  }, [question.id]);
 
-  const handleAnswer = useCallback(
-    (option: number | string) => {
-      if (phase !== "answering") return;
-      setSelectedOption(option);
+  const activeQuestion = useMemo(
+    () => (phase === "microPractice" && microQuestion ? microQuestion : question),
+    [phase, microQuestion, question]
+  );
 
-      const correct = String(option) === String(question.answer);
+  const processAnswer = useCallback(
+    (answer: string | number, isMicroPractice: boolean) => {
+      const targetQuestion = isMicroPractice ? microQuestion : question;
+      if (!targetQuestion) return;
+
+      const correct = String(answer) === String(targetQuestion.answer);
+      
+      if (isMicroPractice) {
+        setMicroAttempts((p) => p + 1);
+        setSelectedOption(answer);
+        
+        if (correct) {
+          setCurrentHint("Nice -- you solved it.");
+          setPhase("complete");
+        } else {
+          setCurrentHint("Try again.");
+          setTimeout(() => {
+            setSelectedOption(null);
+            setTextInput("");
+            setCurrentHint(null);
+          }, 800);
+        }
+        return;
+      }
+
+      // Main question logic
       const newAttemptCount = attemptCount + 1;
       setAttemptCount(newAttemptCount);
 
@@ -73,7 +113,6 @@ export function QuestionCard({
 
       // Incorrect
       if (shouldRevealAnswer(newAttemptCount)) {
-        // 3rd wrong -- reveal answer
         setCurrentHint(getRevealMessage(question.type));
         setPhase("revealed");
         if (question.type === "subtraction") {
@@ -88,35 +127,47 @@ export function QuestionCard({
           timestamp: Date.now(),
         });
       } else {
-        // Show hint
         const hint = getHintForAttempt(question.type, newAttemptCount);
         setCurrentHint(hint);
-        // Reset selection after a moment
-        setTimeout(() => setSelectedOption(null), 600);
+        setTimeout(() => {
+          setSelectedOption(null);
+        }, 600);
       }
     },
-    [attemptCount, phase, question, onComplete, addStar]
+    [attemptCount, question, microQuestion, onComplete, addStar]
   );
+
+  const handleAnswer = useCallback(
+    (option: number | string) => {
+      if (phase !== "answering") return;
+      setSelectedOption(option);
+      processAnswer(option, false);
+    },
+    [phase, processAnswer]
+  );
+
+  const handleDrawingSubmit = useCallback((recognizedNumber: number | null) => {
+    if (phase !== "answering" && phase !== "microPractice") return;
+    
+    if (recognizedNumber !== null) {
+      // Use recognized number
+      if (phase === "microPractice") {
+        processAnswer(recognizedNumber, true);
+      } else {
+        processAnswer(recognizedNumber, false);
+      }
+    } else {
+      // Recognition failed
+      setCurrentHint("I couldn't recognize that. Try drawing clearer or use the buttons below.");
+    }
+  }, [phase, processAnswer]);
 
   const handleMicroAnswer = useCallback(
     (option: number | string) => {
       if (!microQuestion) return;
-      const correct = String(option) === String(microQuestion.answer);
-      setMicroAttempts((p) => p + 1);
-      setSelectedOption(option);
-
-      if (correct) {
-        setCurrentHint("Nice -- you solved it.");
-        setPhase("complete");
-      } else {
-        setCurrentHint("Try again.");
-        setTimeout(() => {
-          setSelectedOption(null);
-          setCurrentHint(null);
-        }, 800);
-      }
+      processAnswer(option, true);
     },
-    [microQuestion]
+    [microQuestion, processAnswer]
   );
 
   const handleRevealContinue = useCallback(() => {
@@ -133,6 +184,7 @@ export function QuestionCard({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (phase !== "answering" && phase !== "microPractice") return;
+      if (inputMode === "draw") return; // No keyboard shortcuts in draw mode
 
       const key = e.key;
       const index = parseInt(key, 10) - 1;
@@ -149,7 +201,7 @@ export function QuestionCard({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [phase, activeQuestion, handleAnswer, handleMicroAnswer]);
+  }, [phase, activeQuestion, handleAnswer, handleMicroAnswer, inputMode]);
 
   const motionProps = {
     initial: { opacity: 0, y: 10 },
@@ -267,49 +319,31 @@ export function QuestionCard({
             )}
           </AnimatePresence>
 
-          {/* Options */}
+          {/* Answer Input */}
           {(phase === "answering" || phase === "microPractice") && (
-            <div className="grid grid-cols-2 gap-4">
-              {activeQuestion.options.map((option) => {
-                const isSelected = selectedOption === option;
-                // Check if this option is the one selected AND we are not in correct state yet
-                // If it IS selected and it IS NOT the answer, it's wrong.
-                const isWrong = isSelected && String(option) !== String(activeQuestion.answer) && !isCorrect;
-
-                // Determine button class based on state
-                let buttonClass = "h-16 text-xl font-bold rounded-2xl border-2 transition-all ";
-                if (isWrong) {
-                  buttonClass += "border-destructive/50 bg-destructive/5 animate-shake";
-                } else if (isSelected && isCorrect) {
-                  // Only show green if they got it correct
-                  buttonClass += "border-secondary bg-secondary animate-correct-glow";
-                } else {
-                  buttonClass += "border-transparent";
-                }
-
-                return (
-                  <Button
-                    key={String(option)}
-                    variant={isWrong ? "outline" : (isSelected && isCorrect) ? "default" : "secondary"}
-                    className={buttonClass}
-                    onClick={() =>
-                      phase === "microPractice"
-                        ? handleMicroAnswer(option)
-                        : handleAnswer(option)
-                    }
-                    disabled={false}
-                    aria-label={`Answer: ${option}`}
-                  >
-                    <span className="flex items-center justify-between w-full">
-                      <span className="flex-1 text-center">{String(option)}</span>
-                      <kbd className="hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-50">
-                        {activeQuestion.options.indexOf(option) + 1}
-                      </kbd>
-                    </span>
-                  </Button>
-                );
-              })}
-            </div>
+            <>
+              {inputMode === "multiple" ? (
+                <MultipleChoiceInput
+                  options={activeQuestion.options}
+                  selectedOption={selectedOption}
+                  correctAnswer={activeQuestion.answer}
+                  isCorrect={isCorrect}
+                  onSelect={(option) =>
+                    phase === "microPractice"
+                      ? handleMicroAnswer(option)
+                      : handleAnswer(option)
+                  }
+                />
+              ) : (
+                <DrawingCanvas
+                  onSubmit={handleDrawingSubmit}
+                  onClear={() => setCurrentHint(null)}
+                  isCorrect={isCorrect}
+                  showFeedback={phase === "complete" || (currentHint !== null && currentHint !== "I couldn't recognize that. Try drawing clearer or use the buttons below.")}
+                  useTensorFlow={useTensorFlow}
+                />
+              )}
+            </>
           )}
 
           {/* Continue button after completion */}
