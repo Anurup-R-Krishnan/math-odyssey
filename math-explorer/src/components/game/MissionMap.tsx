@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { Mission } from "@/types/game";
 import MissionNode from "./MissionNode";
 import { motion } from "framer-motion";
@@ -6,6 +6,18 @@ import { motion } from "framer-motion";
 interface MissionMapProps {
     missions: Mission[];
 }
+
+// Constants for layout
+const NODE_HEIGHT = 180; // Vertical spacing (Increased for breathing room)
+const AMPLITUDE = 100; // How wide the zigzag is
+const OFFSET_Y = 80; // Initial top padding
+
+// Calculate position for a node
+const getNodePosition = (index: number) => {
+    const y = index * NODE_HEIGHT + OFFSET_Y;
+    const xOffset = Math.sin(index * 2) * AMPLITUDE;
+    return { x: xOffset, y };
+};
 
 const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -27,23 +39,11 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
         return () => window.removeEventListener("resize", updateDimensions);
     }, [missions]);
 
-    // Constants for layout
-    const NODE_HEIGHT = 180; // Vertical spacing (Increased for breathing room)
-    const AMPLITUDE = 100; // How wide the zigzag is
-    const OFFSET_Y = 80; // Initial top padding
-
-    // Calculate position for a node
-    const getNodePosition = (index: number) => {
-        const y = index * NODE_HEIGHT + OFFSET_Y;
-        const xOffset = Math.sin(index * 2) * AMPLITUDE;
-        return { x: xOffset, y };
-    };
-
     // Generate SVG Path
-    const generatePath = () => {
+    const path = useMemo(() => {
         if (missions.length === 0) return "";
 
-        let path = "";
+        let pathStr = "";
         missions.forEach((_, index) => {
             const current = getNodePosition(index);
 
@@ -51,7 +51,7 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
             const cy = current.y + 48; // Center in the 96px high node (approx)
 
             if (index === 0) {
-                path += `M ${cx} ${cy}`;
+                pathStr += `M ${cx} ${cy}`;
             } else {
                 const prev = getNodePosition(index - 1);
                 const px = dimensions.width / 2 + prev.x;
@@ -62,11 +62,11 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
                 const cp2x = cx;
                 const cp2y = cy - (cy - py) * 0.5;
 
-                path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${cx} ${cy}`;
+                pathStr += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${cx} ${cy}`;
             }
         });
-        return path;
-    };
+        return pathStr;
+    }, [missions, dimensions]);
 
     return (
         <div className="relative w-full max-w-lg mx-auto py-12" ref={containerRef}>
@@ -77,7 +77,7 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
             >
                 {/* Glow effect for path (adjusted for light theme) */}
                 <path
-                    d={generatePath()}
+                    d={path}
                     fill="none"
                     stroke="rgba(148, 163, 184, 0.2)" // slate-400/20
                     strokeWidth="20"
@@ -87,7 +87,7 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
 
                 {/* Dashed Base Path */}
                 <path
-                    d={generatePath()}
+                    d={path}
                     fill="none"
                     stroke="rgba(148, 163, 184, 0.4)" // slate-400/40
                     strokeWidth="12"
@@ -97,7 +97,7 @@ const MissionMap: React.FC<MissionMapProps> = ({ missions }) => {
 
                 {/* Animated Progress Path (Optional overlay) */}
                 <motion.path
-                    d={generatePath()}
+                    d={path}
                     fill="none"
                     stroke="rgba(99, 102, 241, 0.4)" // indigo-500/40
                     strokeWidth="4"
