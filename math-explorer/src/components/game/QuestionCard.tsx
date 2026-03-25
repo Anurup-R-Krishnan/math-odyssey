@@ -23,8 +23,6 @@ interface QuestionCardProps {
   question: Question;
   onComplete: (attempt: QuestionAttempt) => void;
   onNextQuestion: () => void;
-  inputMode: "multiple" | "draw";
-  useTensorFlow?: boolean;
 }
 
 type Phase = "answering" | "revealed" | "microPractice" | "complete";
@@ -33,8 +31,6 @@ export function QuestionCard({
   question,
   onComplete,
   onNextQuestion,
-  inputMode,
-  useTensorFlow = true,
 }: QuestionCardProps) {
   const { addStar } = useStars();
   const [attemptCount, setAttemptCount] = useState(0);
@@ -84,7 +80,6 @@ export function QuestionCard({
           setCurrentHint("Try again.");
           setTimeout(() => {
             setSelectedOption(null);
-            setTextInput("");
             setCurrentHint(null);
           }, 800);
         }
@@ -184,7 +179,6 @@ export function QuestionCard({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (phase !== "answering" && phase !== "microPractice") return;
-      if (inputMode === "draw") return; // No keyboard shortcuts in draw mode
 
       const key = e.key;
       const index = parseInt(key, 10) - 1;
@@ -201,7 +195,7 @@ export function QuestionCard({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [phase, activeQuestion, handleAnswer, handleMicroAnswer, inputMode]);
+  }, [phase, activeQuestion, handleAnswer, handleMicroAnswer]);
 
   const motionProps = {
     initial: { opacity: 0, y: 10 },
@@ -239,14 +233,14 @@ export function QuestionCard({
                   count={activeQuestion.operandA}
                   color="blue"
                   label={String(activeQuestion.operandA)}
-                  groupSize={5}
+                  groupSize={0}
                 />
                 <span className="text-xl font-bold text-muted-foreground">+</span>
                 <ObjectVisualizer
                   count={activeQuestion.operandB}
                   color="green"
                   label={String(activeQuestion.operandB)}
-                  groupSize={5}
+                  groupSize={0}
                 />
               </div>
             )}
@@ -259,7 +253,7 @@ export function QuestionCard({
                   count={activeQuestion.operandA}
                   color="blue"
                   label={String(activeQuestion.operandA)}
-                  groupSize={5}
+                  groupSize={0}
                 />
                 <span className="text-xl font-bold text-muted-foreground">-</span>
                 <ObjectVisualizer
@@ -267,7 +261,7 @@ export function QuestionCard({
                   color="red"
                   fadeOut={showFadeOut}
                   label={String(activeQuestion.operandB)}
-                  groupSize={5}
+                  groupSize={0}
                 />
               </div>
             )}
@@ -321,29 +315,25 @@ export function QuestionCard({
 
           {/* Answer Input */}
           {(phase === "answering" || phase === "microPractice") && (
-            <>
-              {inputMode === "multiple" ? (
-                <MultipleChoiceInput
-                  options={activeQuestion.options}
-                  selectedOption={selectedOption}
-                  correctAnswer={activeQuestion.answer}
-                  isCorrect={isCorrect}
-                  onSelect={(option) =>
-                    phase === "microPractice"
-                      ? handleMicroAnswer(option)
-                      : handleAnswer(option)
-                  }
-                />
-              ) : (
-                <DrawingCanvas
-                  onSubmit={handleDrawingSubmit}
-                  onClear={() => setCurrentHint(null)}
-                  isCorrect={isCorrect}
-                  showFeedback={phase === "complete" || (currentHint !== null && currentHint !== "I couldn't recognize that. Try drawing clearer or use the buttons below.")}
-                  useTensorFlow={useTensorFlow}
-                />
-              )}
-            </>
+            <div className="space-y-4">
+              <MultipleChoiceInput
+                options={activeQuestion.options}
+                selectedOption={selectedOption}
+                correctAnswer={activeQuestion.answer}
+                isCorrect={isCorrect}
+                onSelect={(option) =>
+                  phase === "microPractice"
+                    ? handleMicroAnswer(option)
+                    : handleAnswer(option)
+                }
+              />
+              <DrawingCanvas
+                onSubmit={handleDrawingSubmit}
+                onClear={() => setCurrentHint(null)}
+                isCorrect={isCorrect}
+                showFeedback={phase === "complete" || (currentHint !== null && currentHint !== "I couldn't recognize that. Try drawing clearer or use the buttons below.")}
+              />
+            </div>
           )}
 
           {/* Continue button after completion */}

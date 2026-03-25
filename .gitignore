@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 docs/
+datasets/
+math-explorer/datasets/
+*.pkl

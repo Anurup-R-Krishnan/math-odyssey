@@ -6,14 +6,18 @@ import { DrawingCanvas } from "@/components/game/DrawingCanvas";
 beforeEach(() => {
   HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
     strokeStyle: "",
+    fillStyle: "",
     lineWidth: 0,
     lineCap: "",
     lineJoin: "",
     beginPath: vi.fn(),
+    setTransform: vi.fn(),
+    scale: vi.fn(),
     moveTo: vi.fn(),
     lineTo: vi.fn(),
     stroke: vi.fn(),
     clearRect: vi.fn(),
+    fillRect: vi.fn(),
   })) as any;
 });
 

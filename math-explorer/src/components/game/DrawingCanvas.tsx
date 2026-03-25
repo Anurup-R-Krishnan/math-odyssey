@@ -1,26 +1,30 @@
 import { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Eraser } from "lucide-react";
-import { DrawingRecognizer } from "@/lib/drawingRecognizer";
-import { TensorFlowRecognizer } from "@/lib/tensorflowRecognizer";
+function applyDrawingStyle(ctx: CanvasRenderingContext2D) {
+  ctx.strokeStyle = "#6366f1";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+}
+
+type Point = { x: number; y: number };
 
 interface DrawingCanvasProps {
   onSubmit: (recognizedNumber: number | null) => void;
   onClear: () => void;
   isCorrect?: boolean;
   showFeedback?: boolean;
-  useTensorFlow?: boolean;
 }
 
-export function DrawingCanvas({ onSubmit, onClear, isCorrect, showFeedback, useTensorFlow = true }: DrawingCanvasProps) {
+export function DrawingCanvas({ onSubmit, onClear, isCorrect, showFeedback }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const recognizerRef = useRef(new DrawingRecognizer());
-  const tfRecognizerRef = useRef<TensorFlowRecognizer | null>(null);
-  const currentStrokeRef = useRef<{ x: number; y: number }[]>([]);
+  const strokesRef = useRef<Point[][]>([]);
+  const currentStrokeRef = useRef<Point[]>([]);
+  const [isRecognizing, setIsRecognizing] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
   const [announcement, setAnnouncement] = useState("");
-  const [isModelLoading, setIsModelLoading] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -29,31 +33,42 @@ export function DrawingCanvas({ onSubmit, onClear, isCorrect, showFeedback, useT
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas size
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    const setupCanvas = () => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.max(window.devicePixelRatio || 1, 1);
 
-    // Configure drawing style
-    ctx.strokeStyle = "#6366f1";
-    ctx.lineWidth = 4;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
 
-    // Initialize TensorFlow model
-    if (useTensorFlow && !tfRecognizerRef.current) {
-      tfRecognizerRef.current = new TensorFlowRecognizer();
-      setIsModelLoading(true);
-      tfRecognizerRef.current.loadModel().then(() => {
-        setIsModelLoading(false);
-      });
-    }
+      if (typeof ctx.setTransform === "function") {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      } else if (typeof ctx.scale === "function") {
+        // Reset any prior scaling before applying new scale.
+        if (typeof ctx.resetTransform === "function") {
+          ctx.resetTransform();
+        } else if (typeof ctx.setTransform === "function") {
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+        }
+        ctx.scale(dpr, dpr);
+      }
+
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      ctx.fillStyle = "#ffffff";
+      if (typeof ctx.fillRect === "function") {
+        ctx.fillRect(0, 0, rect.width, rect.height);
+      }
+
+      // Resizing the canvas resets drawing styles, so re-apply them here.
+      applyDrawingStyle(ctx);
+    };
+
+    setupCanvas();
+    window.addEventListener("resize", setupCanvas);
 
     return () => {
-      if (tfRecognizerRef.current) {
-        tfRecognizerRef.current.dispose();
-      }
+      window.removeEventListener("resize", setupCanvas);
     };
-  }, [useTensorFlow]);
+  }, []);
 
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current;
@@ -61,6 +76,9 @@ export function DrawingCanvas({ onSubmit, onClear, isCorrect, showFeedback, useT
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // Defensive: if a resize happened, ensure brush style is correct.
+    applyDrawingStyle(ctx);
 
     setIsDrawing(true);
     setHasDrawn(true);
@@ -70,6 +88,7 @@ export function DrawingCanvas({ onSubmit, onClear, isCorrect, showFeedback, useT
     const y = "touches" in e ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
     currentStrokeRef.current = [{ x, y }];
+    strokesRef.current.push(currentStrokeRef.current);
     ctx.beginPath();
     ctx.moveTo(x, y);
   };
@@ -96,7 +115,7 @@ export function DrawingCanvas({ onSubmit, onClear, isCorrect, showFeedback, useT
 
   const stopDrawing = () => {
     if (isDrawing && currentStrokeRef.current.length > 0) {
-      recognizerRef.current.addStroke(currentStrokeRef.current);
+      // Keep stroke points for OCR rendering; just end current stroke.
       currentStrokeRef.current = [];
     }
     setIsDrawing(false);
@@ -109,35 +128,46 @@ export function DrawingCanvas({ onSubmit, onClear, isCorrect, showFeedback, useT
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    recognizerRef.current.clear();
+    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    ctx.fillStyle = "#ffffff";
+    if (typeof ctx.fillRect === "function") {
+      ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    }
     currentStrokeRef.current = [];
+    strokesRef.current = [];
     setHasDrawn(false);
     onClear();
   };
 
   const handleSubmit = async () => {
-    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
+    setIsRecognizing(true);
     let recognized: number | null = null;
+    try {
+      // Capture canvas as base64
+      const imageData = canvas.toDataURL("image/png");
 
-    if (useTensorFlow && tfRecognizerRef.current) {
-      // Use TensorFlow recognition
-      const result = await tfRecognizerRef.current.recognize(canvasRef.current);
-      if (result && result.confidence > 0.6) {
-        recognized = result.digit;
-        setAnnouncement(`Recognized number: ${recognized} (${Math.round(result.confidence * 100)}% confident)`);
-      } else {
-        setAnnouncement("Could not recognize drawing with high confidence. Please try again.");
-      }
-    } else {
-      // Fallback to geometric recognition
-      recognized = recognizerRef.current.recognize();
-      if (recognized !== null) {
+      // Call backend API
+      const response = await fetch("http://localhost:8000/api/recognize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: imageData }),
+      });
+
+      const data = await response.json();
+      if (data.digit !== undefined && data.digit !== null) {
+        recognized = Number.parseInt(data.digit, 10);
         setAnnouncement(`Recognized number: ${recognized}`);
       } else {
-        setAnnouncement("Could not recognize drawing. Please try again.");
+        setAnnouncement("Could not recognize number. Please try again.");
       }
+    } catch (error) {
+      console.error("Recognition error:", error);
+      setAnnouncement("Recognition failed. Please try again.");
+    } finally {
+      setIsRecognizing(false);
     }
 
     onSubmit(recognized);
@@ -149,17 +179,16 @@ export function DrawingCanvas({ onSubmit, onClear, isCorrect, showFeedback, useT
       <div role="status" aria-live="polite" className="sr-only">
         {announcement}
       </div>
-      
+
       <div className="relative">
         <canvas
           ref={canvasRef}
-          className={`w-full h-48 border-2 rounded-2xl bg-white touch-none cursor-crosshair transition-all ${
-            showFeedback 
-              ? isCorrect 
-                ? "border-secondary shadow-lg shadow-secondary/20 animate-correct-glow" 
+          className={`w-full h-48 border-2 rounded-2xl bg-white touch-none cursor-crosshair transition-all ${showFeedback
+              ? isCorrect
+                ? "border-secondary shadow-lg shadow-secondary/20 animate-correct-glow"
                 : "border-destructive shadow-lg shadow-destructive/20 animate-shake"
               : "border-primary/20"
-          }`}
+            }`}
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
@@ -183,7 +212,7 @@ export function DrawingCanvas({ onSubmit, onClear, isCorrect, showFeedback, useT
           variant="outline"
           onClick={handleClear}
           className="flex-1 h-12 rounded-2xl"
-          disabled={!hasDrawn || isModelLoading}
+          disabled={!hasDrawn || isRecognizing}
         >
           <Eraser className="w-4 h-4 mr-2" />
           Clear
@@ -191,9 +220,9 @@ export function DrawingCanvas({ onSubmit, onClear, isCorrect, showFeedback, useT
         <Button
           onClick={handleSubmit}
           className="flex-1 h-12 rounded-2xl text-base font-bold"
-          disabled={!hasDrawn || isModelLoading}
+          disabled={!hasDrawn || isRecognizing}
         >
-          {isModelLoading ? "Loading AI..." : "Submit Drawing"}
+          {isRecognizing ? "Recognizing..." : "Submit Drawing"}
         </Button>
       </div>
     </div>

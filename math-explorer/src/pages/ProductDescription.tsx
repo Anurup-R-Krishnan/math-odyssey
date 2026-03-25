@@ -86,7 +86,7 @@ const ProductDescription = () => {
           <p>
             <span className="font-medium text-foreground">Micro-hint escalation:</span>{" "}
             After the first incorrect attempt, a contextual hint appears (e.g.,
-            "Try grouping into fives"). A second incorrect attempt triggers a more
+            "add one step at a time"). A second incorrect attempt triggers a more
             specific hint. After a third incorrect attempt, the answer is gently
             revealed with an animated demonstration, followed by a micro-practice
             question at the same support level.

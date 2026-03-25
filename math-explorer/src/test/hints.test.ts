@@ -5,12 +5,12 @@ describe("Hint Engine", () => {
   describe("getHintForAttempt", () => {
     it("returns hint1 on first incorrect attempt for addition", () => {
       const hint = getHintForAttempt("addition", 1);
-      expect(hint).toBe("Try grouping into fives.");
+      expect(hint).toBe("Count the first number, then add the second number one step at a time.");
     });
 
     it("returns hint2 on second incorrect attempt for addition", () => {
       const hint = getHintForAttempt("addition", 2);
-      expect(hint).toBe("Count groups: see the grouping animation for the operands.");
+      expect(hint).toBe("Track the running total as you add each item.");
     });
 
     it("returns null on third attempt (reveal trigger)", () => {
@@ -62,7 +62,7 @@ describe("Hint Engine", () => {
   describe("getRevealMessage", () => {
     it("returns correct reveal message for addition", () => {
       expect(getRevealMessage("addition")).toBe(
-        "Let's see how the groups come together."
+        "Let's combine both amounts step by step."
       );
     });
 

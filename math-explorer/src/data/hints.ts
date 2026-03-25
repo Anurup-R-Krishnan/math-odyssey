@@ -3,9 +3,9 @@ import { HintTemplate, ProblemType } from "@/types/game";
 export const hintTemplates: Record<ProblemType, HintTemplate> = {
   addition: {
     type: "addition",
-    hint1: "Try grouping into fives.",
-    hint2: "Count groups: see the grouping animation for the operands.",
-    revealMessage: "Let's see how the groups come together.",
+    hint1: "Count the first number, then add the second number one step at a time.",
+    hint2: "Track the running total as you add each item.",
+    revealMessage: "Let's combine both amounts step by step.",
   },
   subtraction: {
     type: "subtraction",
